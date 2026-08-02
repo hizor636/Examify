@@ -17,10 +17,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[500px] h-[250px] sm:h-[350px] bg-gradient-to-tr from-orange-400/10 to-amber-200/20 blur-3xl rounded-full pointer-events-none -z-10 animate-pulse-slow" />
 
       {/* Hero Eyebrow Badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50/90 border border-brand-orange/20 mb-6 animate-fade-in">
-        <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
-        <span className="text-xs font-semibold tracking-wide text-slate-800">
-          Built for Last-Minute BCA Exam Success
+      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50/90 border border-red-200/50 mb-6 animate-fade-in">
+        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        <span className="text-xs font-semibold tracking-wide text-red-700">
+          Exam tomorrow? Jump straight to your semester.
         </span>
       </div>
 
@@ -34,26 +34,31 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         Access semester-wise notes, 2025 question papers, model answers, and AI-powered doubt support in one clean place.
       </p>
 
-      {/* Action Buttons with Clear Hierarchy */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-fade-in-delay-3">
-        {/* Primary CTA: Dominant Action */}
+      {/* Search Bar + CTA */}
+      <div className="flex flex-col items-center justify-center gap-4 mb-12 animate-fade-in-delay-3 w-full max-w-xl mx-auto">
+        {/* Search Bar */}
+        <div className="w-full relative group shadow-sm hover:shadow-md transition-shadow rounded-xl">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-orange transition-colors">
+            search
+          </span>
+          <input 
+            type="text" 
+            placeholder="Search notes, questions, topics..." 
+            className="w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none text-base transition-all bg-white"
+            onClick={onBrowseSemester}
+            readOnly
+          />
+        </div>
+
+        {/* Primary CTA */}
         <button
           onClick={onBrowseSemester}
-          className="w-full sm:w-auto bg-brand-orange text-white px-9 py-4 rounded-lg font-semibold text-base btn-primary-glow flex items-center justify-center gap-2.5 group"
+          className="w-full sm:w-auto bg-brand-orange text-white px-10 py-4 rounded-xl font-bold text-base btn-primary-glow flex items-center justify-center gap-2.5 group"
         >
-          <span>Browse My Semester</span>
+          <span>Open Your Semester</span>
           <span className="material-symbols-outlined text-xl transition-transform duration-300 group-hover:translate-x-1">
             arrow_forward
           </span>
-        </button>
-
-        {/* Secondary CTA */}
-        <button
-          onClick={onStartRevising}
-          className="w-full sm:w-auto text-slate-800 bg-white border border-slate-200/90 px-8 py-4 rounded-lg font-semibold text-base hover:bg-slate-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:border-slate-300"
-        >
-          <span>Start Revising</span>
-          <span className="material-symbols-outlined text-xl text-slate-500">menu_book</span>
         </button>
       </div>
 

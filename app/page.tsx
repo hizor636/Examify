@@ -27,9 +27,11 @@ function MainApp() {
   // Active Semester View (null means show Landing Page)
   const [activeSemester, setActiveSemester] = useState<number | null>(null);
 
-  // Auto-redirect returning logged-in student to dashboard for THEIR current semester only
+  // Auto-redirect returning logged-in student to dashboard, and handle logout
   React.useEffect(() => {
-    if (user && activeSemester === null) {
+    if (!user) {
+      setActiveSemester(null);
+    } else if (activeSemester === null) {
       setActiveSemester(user.semester || 4);
     }
   }, [user]);
@@ -53,7 +55,7 @@ function MainApp() {
   if (activeSemester) {
     return (
       <main className="relative min-h-screen bg-surface-dim font-body-md text-on-background overflow-x-hidden selection:bg-primary selection:text-white">
-        <DashboardSidebar />
+        <DashboardSidebar onGoHome={() => setActiveSemester(null)} />
         
         <div className="pl-72 flex flex-col min-h-screen">
           <DashboardHeader 
@@ -105,8 +107,8 @@ function MainApp() {
         {/* 2. Trust Metrics Strip */}
         <TrustStrip />
 
-        {/* 3. Workflow */}
-        <HowItWorks />
+        {/* 3. Workflow (Only for non-logged-in users) */}
+        {!user && <HowItWorks />}
 
         {/* 4. Institutional Credibility */}
         <AboutSection />

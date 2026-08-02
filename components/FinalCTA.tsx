@@ -28,7 +28,7 @@ export const FinalCTA: React.FC<FinalCTAProps> = ({ onBrowseSemester }) => {
             onClick={onBrowseSemester}
             className="bg-brand-orange text-white px-9 py-4 rounded-xl font-semibold text-lg btn-primary-glow inline-flex items-center gap-2.5 group"
           >
-            <span>Open Your Semester &amp; Start Revising</span>
+            <span>Open Your Semester</span>
             <span className="material-symbols-outlined text-xl transition-transform duration-300 group-hover:translate-x-1">
               arrow_forward
             </span>

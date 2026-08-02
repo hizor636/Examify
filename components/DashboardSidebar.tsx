@@ -5,12 +5,16 @@ import Link from 'next/link';
 
 interface DashboardSidebarProps {
   onNavClick?: () => void;
+  onGoHome?: () => void;
 }
 
-export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onNavClick }) => {
+export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onNavClick, onGoHome }) => {
   return (
     <aside className="fixed left-0 top-0 h-full w-72 bg-[#0c1322] z-50 flex flex-col border-r border-white/5">
-      <div className="p-gutter flex items-center gap-3 mb-stack-lg">
+      <div 
+        className="p-gutter flex items-center gap-3 mb-stack-lg cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={onGoHome}
+      >
         <div className="w-10 h-10 rounded-xl bg-[#ffb690] flex items-center justify-center">
           <span className="material-symbols-outlined text-[#552100]">school</span>
         </div>

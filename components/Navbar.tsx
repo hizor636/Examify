@@ -119,15 +119,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
           </button>
         </div>
 
-        {/* Right: "Get Started" CTA */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Right: Actions */}
+        <div className="hidden md:flex items-center gap-4">
+          <button
+            onClick={onOpenLogin || onGetStarted}
+            className="text-sm font-semibold text-slate-600 hover:text-brand-orange transition-colors"
+          >
+            Log in
+          </button>
           <button
             onClick={onGetStarted}
-            aria-label="Get Started"
-            className="bg-brand-orange text-white px-6 py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center gap-1.5"
+            aria-label="Open Your Semester"
+            className="bg-brand-orange text-white px-6 py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center gap-1.5 group"
           >
-            <span>Get Started</span>
-            <span className="material-symbols-outlined text-base">arrow_forward</span>
+            <span>Open Your Semester</span>
+            <span className="material-symbols-outlined text-base transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
           </button>
         </div>
 
@@ -173,11 +179,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
           <button
             onClick={() => {
               setMobileMenuOpen(false);
+              if (onOpenLogin || onGetStarted) {
+                (onOpenLogin || onGetStarted)!();
+              }
+            }}
+            className="w-full text-center py-2 text-sm font-semibold text-slate-600 hover:text-brand-orange mt-2"
+          >
+            Log in
+          </button>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
               if (onGetStarted) onGetStarted();
             }}
             className="w-full bg-brand-orange text-white py-3 rounded-xl font-bold text-xs text-center btn-primary-glow flex items-center justify-center gap-1.5 mt-2"
           >
-            <span>Get Started (USN Verification)</span>
+            <span>Open Your Semester</span>
             <span className="material-symbols-outlined text-base">arrow_forward</span>
           </button>
         </div>
