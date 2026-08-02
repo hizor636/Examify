@@ -18,10 +18,9 @@ interface SemesterPortalProps {
 
 export const SemesterPortal: React.FC<SemesterPortalProps> = ({
   semester,
-  onSemesterSelect,
   onBackToMain,
 }) => {
-  const { user, setSemester, calculateReadinessScore } = useAuth();
+  const { user, calculateReadinessScore } = useAuth();
 
   // Modal States
   const [selectedNote, setSelectedNote] = useState<NoteItem | null>(null);
@@ -41,11 +40,6 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
 
   const semesterInfo = BCA_SEMESTER_DATA[semester] || BCA_SEMESTER_DATA[1];
   const readinessData = calculateReadinessScore();
-
-  const handleSelectSemester = (sem: number) => {
-    setSemester(sem);
-    if (onSemesterSelect) onSemesterSelect(sem);
-  };
 
   const handleSendAi = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +67,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
 
   return (
     <div className="max-w-[1300px] mx-auto px-4 sm:px-6 py-6 space-y-10">
-      {/* Portal Header & Context Bar */}
+      {/* Portal Header & Context Bar (Single-Semester Access: No Semester Switcher Row!) */}
       <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl relative overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
           <div>
@@ -83,13 +77,13 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
             </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">{semesterInfo.title}</h1>
             
-            {/* Styled USN Neutral Badge Pill (Fixing Red Styling Error) */}
+            {/* Styled USN Neutral Badge Pill */}
             <div className="flex flex-wrap items-center gap-3 mt-2 text-xs font-medium text-slate-350">
               <span>Student: <strong className="text-white">{user?.name || 'BCA Student'}</strong></span>
               <span>•</span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-800 text-brand-orange border border-slate-700 font-mono font-bold text-xs shadow-xs">
                 <span className="material-symbols-outlined text-sm">badge</span>
-                <span>USN: {user?.usn || '1MV23BC230'}</span>
+                <span>USN: {user?.usn || '1NC22CS123'}</span>
               </span>
               <span>•</span>
               <span>Dept: <strong className="text-white">{user?.department || 'BCA'}</strong></span>
@@ -111,32 +105,9 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
                 className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-700 transition-colors"
               >
                 <span className="material-symbols-outlined text-base">arrow_back</span>
-                <span>Back to Overview</span>
+                <span>Back to Landing</span>
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Semester Switcher Bar */}
-        <div className="mt-6 pt-6 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3">
-          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
-            <span className="material-symbols-outlined text-brand-orange text-sm">tune</span>
-            <span>Switch Active Semester:</span>
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5, 6].map((semNum) => (
-              <button
-                key={semNum}
-                onClick={() => handleSelectSemester(semNum)}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  semester === semNum
-                    ? 'bg-brand-orange text-white shadow-sm scale-105'
-                    : 'bg-slate-800/90 text-slate-300 hover:bg-slate-800'
-                }`}
-              >
-                Semester {semNum}
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -182,7 +153,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
               <h3 className="text-base font-bold text-slate-900">Today's Focus</h3>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Focus on 10-mark high-yield topics or launch a Rapid Fire Quiz sprint for last-minute exam prep.
+              Focus on high-yield exam topics or launch a Rapid Fire Quiz sprint for last-minute prep.
             </p>
             <button
               onClick={() => setIsSprintOpen(true)}
@@ -217,7 +188,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* CATEGORIZED ROW 1: STUDY MATERIAL (Subjects with Progress Bars) */}
+      {/* CATEGORIZED ROW 1: STUDY MATERIAL */}
       {/* ========================================================================= */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -231,7 +202,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
         </div>
 
         <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
-          {/* My Subjects Cards (with Progress Signals!) */}
+          {/* My Subjects Cards / WIP Placeholder */}
           {semesterInfo.subjects.length > 0 ? (
             semesterInfo.subjects.map((subj) => (
               <div
@@ -251,7 +222,6 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{subj.description}</p>
                 </div>
 
-                {/* Per-Subject Progress Bar Indicator */}
                 <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
                   <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
                     <span>Subject Progress</span>
@@ -268,7 +238,6 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
               </div>
             ))
           ) : (
-            /* WIP Subject Placeholder State */
             <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
               <div>
                 <span className="w-10 h-10 rounded-2xl bg-orange-100 text-brand-orange flex items-center justify-center mb-3">
@@ -286,7 +255,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
             </div>
           )}
 
-          {/* Notes Vault Cards / Placeholder */}
+          {/* Notes Vault Cards / WIP Placeholder */}
           {allNotes.length > 0 ? (
             allNotes.map((note) => (
               <div
@@ -329,7 +298,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
             </div>
           )}
 
-          {/* PYQ Papers Cards / Placeholder */}
+          {/* PYQ Papers Cards / WIP Placeholder */}
           {allPyqs.length > 0 ? (
             allPyqs.map((pyq) => (
               <div

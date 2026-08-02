@@ -2,44 +2,50 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '../src/context/AuthContext';
 
 interface NavbarProps {
   onOpenLogin?: () => void;
   onGetStarted?: () => void;
-  activeSemester?: number | null;
-  onSemesterChange?: (sem: number) => void;
-  onOpenProfile?: () => void;
-  onOpenAdmin?: () => void;
-  onOpenCommunity?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
-  onGetStarted,
-  activeSemester = 4,
-  onSemesterChange,
-  onOpenProfile,
-  onOpenAdmin,
-  onOpenCommunity,
-}) => {
-  const { user, setSemester } = useAuth();
+export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+
+      const sections = ['hero', 'how-it-works', 'why-examify', 'about'];
+      const scrollPos = window.scrollY + 100;
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSelectSem = (sem: number) => {
-    if (!user) {
-      if (onGetStarted) onGetStarted();
-    } else {
-      setSemester(sem);
-      if (onSemesterChange) onSemesterChange(sem);
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    if (id === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -52,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       <div className="max-w-[1250px] mx-auto px-4 sm:px-6 flex justify-between items-center h-[72px]">
-        {/* Brand Logo */}
+        {/* Left: Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group shrink-0">
           <span className="w-9 h-9 bg-brand-orange flex items-center justify-center rounded-xl shadow-md shadow-brand-orange/20 group-hover:scale-105 transition-transform duration-300">
             <span className="material-symbols-outlined text-white text-2xl">school</span>
@@ -62,69 +68,67 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </Link>
 
-        {/* Top Navbar Semester Switcher */}
-        <div className="hidden lg:flex items-center gap-2 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80">
-          <span className="text-[11px] font-bold uppercase text-slate-500 pl-2.5 pr-1 flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm text-brand-orange">tune</span>
-            <span>Sem:</span>
-          </span>
-          {[1, 2, 3, 4, 5, 6].map((sem) => (
-            <button
-              key={sem}
-              onClick={() => handleSelectSem(sem)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeSemester === sem
-                  ? 'bg-brand-orange text-white shadow-sm scale-105'
-                  : 'text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Sem {sem}
-            </button>
-          ))}
+        {/* Center: Desktop Marketing Navigation Links */}
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <button
+            onClick={() => scrollToSection('hero')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'hero' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Overview
+            {activeSection === 'hero' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => scrollToSection('how-it-works')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'how-it-works' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            How It Works
+            {activeSection === 'how-it-works' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => scrollToSection('why-examify')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'why-examify' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Why Examify
+            {activeSection === 'why-examify' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => scrollToSection('about')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'about' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            About Us
+            {activeSection === 'about' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
         </div>
 
-        {/* Action Buttons */}
+        {/* Right: "Get Started" CTA */}
         <div className="hidden md:flex items-center gap-3">
-          {onOpenCommunity && (
-            <button
-              onClick={onOpenCommunity}
-              className="text-xs font-bold text-slate-700 hover:text-brand-orange px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-base">forum</span>
-              <span>Community</span>
-            </button>
-          )}
-
-          {user?.role === 'admin' && onOpenAdmin && (
-            <button
-              onClick={onOpenAdmin}
-              className="text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3.5 py-2 rounded-xl transition-colors flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-base">admin_panel_settings</span>
-              <span>Admin</span>
-            </button>
-          )}
-
-          {user ? (
-            <button
-              onClick={onOpenProfile}
-              className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/90 px-3.5 py-2 rounded-xl transition-all"
-            >
-              <span className="w-6 h-6 rounded-full bg-brand-orange text-white text-xs font-bold flex items-center justify-center">
-                {user.name.charAt(0)}
-              </span>
-              <span className="text-xs font-bold text-slate-800">{user.usn || user.name}</span>
-            </button>
-          ) : (
-            <button
-              onClick={onGetStarted}
-              aria-label="Get Started"
-              className="bg-brand-orange text-white px-5 py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center gap-1.5"
-            >
-              <span>Get Started</span>
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
-            </button>
-          )}
+          <button
+            onClick={onGetStarted}
+            aria-label="Get Started"
+            className="bg-brand-orange text-white px-6 py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center gap-1.5"
+          >
+            <span>Get Started</span>
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -141,65 +145,41 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-6 py-4 space-y-4 shadow-lg animate-fade-in">
-          <div>
-            <span className="text-xs font-bold text-slate-500 uppercase block mb-2">Switch Semester</span>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5, 6].map((sem) => (
-                <button
-                  key={sem}
-                  onClick={() => {
-                    handleSelectSem(sem);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`py-2 rounded-xl text-xs font-bold border ${
-                    activeSemester === sem
-                      ? 'bg-brand-orange text-white border-brand-orange'
-                      : 'bg-slate-50 text-slate-700 border-slate-200'
-                  }`}
-                >
-                  Sem {sem}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-            {onOpenCommunity && (
-              <button
-                onClick={() => {
-                  onOpenCommunity();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full text-left py-2 text-xs font-bold text-slate-700 flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-base">forum</span>
-                <span>Community Discussion Forum</span>
-              </button>
-            )}
-
-            {user ? (
-              <button
-                onClick={() => {
-                  if (onOpenProfile) onOpenProfile();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-bold text-center"
-              >
-                Student Profile ({user.usn})
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  if (onGetStarted) onGetStarted();
-                }}
-                className="w-full bg-brand-orange text-white py-3 rounded-xl font-bold text-xs text-center btn-primary-glow"
-              >
-                Get Started (USN Verification)
-              </button>
-            )}
-          </div>
+        <div className="md:hidden border-b border-slate-200 bg-white px-6 py-4 space-y-3 shadow-lg animate-fade-in">
+          <button
+            onClick={() => scrollToSection('hero')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => scrollToSection('how-it-works')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            How It Works
+          </button>
+          <button
+            onClick={() => scrollToSection('why-examify')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            Why Examify
+          </button>
+          <button
+            onClick={() => scrollToSection('about')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            About Us
+          </button>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              if (onGetStarted) onGetStarted();
+            }}
+            className="w-full bg-brand-orange text-white py-3 rounded-xl font-bold text-xs text-center btn-primary-glow flex items-center justify-center gap-1.5 mt-2"
+          >
+            <span>Get Started (USN Verification)</span>
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
         </div>
       )}
     </nav>

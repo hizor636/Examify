@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { useAuth } from '../src/context/AuthContext';
 
 interface AppNavbarProps {
-  activeSemester: number;
-  onSemesterChange: (sem: number) => void;
   onOpenProfile: () => void;
   onOpenAdmin: () => void;
   onOpenCommunity: () => void;
@@ -14,26 +12,19 @@ interface AppNavbarProps {
 }
 
 export const AppNavbar: React.FC<AppNavbarProps> = ({
-  activeSemester,
-  onSemesterChange,
   onOpenProfile,
   onOpenAdmin,
   onOpenCommunity,
   onBackToOverview,
 }) => {
-  const { user, setSemester, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const handleSelectSem = (sem: number) => {
-    setSemester(sem);
-    onSemesterChange(sem);
-  };
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-slate-900 border-b border-slate-800 text-white shadow-md">
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 flex justify-between items-center h-[72px]">
-        {/* Brand Logo & Back Control */}
+        {/* Left: Brand Logo & Back Control */}
         <div className="flex items-center gap-3">
           <Link href="/" onClick={onBackToOverview} className="flex items-center gap-2.5 group shrink-0">
             <span className="w-9 h-9 bg-brand-orange flex items-center justify-center rounded-xl shadow-md shadow-brand-orange/30 group-hover:scale-105 transition-transform duration-300">
@@ -55,35 +46,16 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           )}
         </div>
 
-        {/* Top Navbar Semester Switcher (App Shell) */}
-        <div className="hidden lg:flex items-center gap-2 bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700/80">
-          <span className="text-[11px] font-bold uppercase text-slate-400 pl-2.5 pr-1 flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm text-brand-orange">tune</span>
-            <span>Sem:</span>
-          </span>
-          {[1, 2, 3, 4, 5, 6].map((sem) => (
-            <button
-              key={sem}
-              onClick={() => handleSelectSem(sem)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeSemester === sem
-                  ? 'bg-brand-orange text-white shadow-sm scale-105'
-                  : 'text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              Sem {sem}
-            </button>
-          ))}
-        </div>
+        {/* Center: Clean / Empty (Zero semester tabs, zero marketing links) */}
 
-        {/* Right Side: Account Menu Dropdown (NO "Get Started" button!) */}
+        {/* Right Side: Community Icon & Profile Badge Dropdown (App Shell) */}
         <div className="hidden md:flex items-center gap-3 relative">
           <button
             onClick={onOpenCommunity}
-            className="text-xs font-bold text-slate-300 hover:text-brand-orange px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            className="text-xs font-bold text-slate-300 hover:text-brand-orange px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 transition-colors flex items-center gap-1.5"
           >
-            <span className="material-symbols-outlined text-base">forum</span>
-            <span>Community</span>
+            <span className="material-symbols-outlined text-base text-brand-orange">forum</span>
+            <span>Community Forum</span>
           </button>
 
           {user?.role === 'admin' && (
@@ -169,53 +141,40 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-800 bg-slate-900 px-6 py-4 space-y-4 shadow-xl animate-fade-in">
-          <div>
-            <span className="text-[11px] font-bold uppercase text-slate-400 block mb-2">Switch Active Semester</span>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5, 6].map((sem) => (
-                <button
-                  key={sem}
-                  onClick={() => {
-                    handleSelectSem(sem);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`py-2 rounded-xl text-xs font-bold border ${
-                    activeSemester === sem
-                      ? 'bg-brand-orange text-white border-brand-orange'
-                      : 'bg-slate-800 text-slate-300 border-slate-700'
-                  }`}
-                >
-                  Sem {sem}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="md:hidden border-b border-slate-800 bg-slate-900 px-6 py-4 space-y-3 shadow-xl animate-fade-in">
+          <button
+            onClick={() => {
+              onOpenCommunity();
+              setMobileMenuOpen(false);
+            }}
+            className="w-full text-left py-2.5 px-3 rounded-xl bg-slate-800 text-xs font-bold text-white flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base text-brand-orange">forum</span>
+            <span>Community Discussion Forum</span>
+          </button>
 
-          <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                onOpenProfile();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left py-2.5 px-3 rounded-xl bg-slate-800 text-xs font-bold text-white flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-base text-brand-orange">account_circle</span>
-              <span>Student Profile ({user?.usn})</span>
-            </button>
+          <button
+            onClick={() => {
+              onOpenProfile();
+              setMobileMenuOpen(false);
+            }}
+            className="w-full text-left py-2.5 px-3 rounded-xl bg-slate-800 text-xs font-bold text-white flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base text-brand-orange">account_circle</span>
+            <span>Student Profile ({user?.usn})</span>
+          </button>
 
-            <button
-              onClick={() => {
-                logout();
-                setMobileMenuOpen(false);
-                if (onBackToOverview) onBackToOverview();
-              }}
-              className="w-full text-left py-2.5 px-3 rounded-xl bg-red-950/40 text-xs font-bold text-red-400 flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-base">logout</span>
-              <span>Sign Out</span>
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              logout();
+              setMobileMenuOpen(false);
+              if (onBackToOverview) onBackToOverview();
+            }}
+            className="w-full text-left py-2.5 px-3 rounded-xl bg-red-950/40 text-xs font-bold text-red-400 flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-base">logout</span>
+            <span>Sign Out</span>
+          </button>
         </div>
       )}
     </nav>

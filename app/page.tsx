@@ -27,7 +27,7 @@ function MainApp() {
   // Active Semester View (null means show Landing Page)
   const [activeSemester, setActiveSemester] = useState<number | null>(null);
 
-  // Auto-redirect returning logged-in student to dashboard
+  // Auto-redirect returning logged-in student to dashboard for THEIR current semester only
   React.useEffect(() => {
     if (user && activeSemester === null) {
       setActiveSemester(user.semester || 4);
@@ -42,24 +42,23 @@ function MainApp() {
     setActiveSemester(sem);
   };
 
-  const handleSelectSemester = (sem: number) => {
+  const handleSelectSemester = () => {
     if (!user) {
       setAuthModalOpen(true);
     } else {
-      setActiveSemester(sem);
+      setActiveSemester(user.semester || 4);
     }
   };
 
   return (
     <main className="relative min-h-screen bg-white text-slate-900 overflow-x-hidden font-sans">
       {/* 
-        AUTHENTICATED APP SHELL (AppNavbar) vs PUBLIC MARKETING SHELL (Navbar):
-        Dashboard uses AppNavbar (No marketing links, no Get Started buttons).
+        STRICT SHELL SEPARATION:
+        - Dashboard uses AppNavbar (App Shell: Community + Profile only, ZERO marketing links, ZERO semester tabs).
+        - Landing Page uses Navbar (Public Shell: Marketing links + Get Started CTA).
       */}
       {activeSemester ? (
         <AppNavbar
-          activeSemester={activeSemester}
-          onSemesterChange={(sem) => setActiveSemester(sem)}
           onOpenProfile={() => setProfileModalOpen(true)}
           onOpenAdmin={() => setAdminModalOpen(true)}
           onOpenCommunity={() => setCommunityModalOpen(true)}
@@ -68,21 +67,15 @@ function MainApp() {
       ) : (
         <Navbar
           onGetStarted={handleOpenAuth}
-          activeSemester={user?.semester || 4}
-          onSemesterChange={(sem) => handleSelectSemester(sem)}
-          onOpenProfile={() => setProfileModalOpen(true)}
-          onOpenAdmin={() => setAdminModalOpen(true)}
-          onOpenCommunity={() => setCommunityModalOpen(true)}
         />
       )}
 
       <div className="pt-[76px]">
         {activeSemester ? (
-          /* Main Authenticated Dashboard View & App Footer */
+          /* Main Authenticated Dashboard View (Single-Semester Access: user's current semester) */
           <>
             <SemesterPortal
-              semester={activeSemester}
-              onSemesterSelect={(sem) => setActiveSemester(sem)}
+              semester={user?.semester || activeSemester || 4}
               onBackToMain={() => setActiveSemester(null)}
               onOpenCommunity={() => setCommunityModalOpen(true)}
             />
@@ -96,7 +89,7 @@ function MainApp() {
           <>
             {/* 1. Hero Section */}
             <HeroSection
-              onBrowseSemester={() => handleSelectSemester(user?.semester || 4)}
+              onBrowseSemester={handleSelectSemester}
               onStartRevising={() => {
                 const el = document.getElementById('how-it-works');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -113,7 +106,7 @@ function MainApp() {
             <AboutSection />
 
             {/* 5. Final CTA */}
-            <FinalCTA onBrowseSemester={() => handleSelectSemester(user?.semester || 4)} />
+            <FinalCTA onBrowseSemester={handleSelectSemester} />
 
             {/* Public Marketing Footer */}
             <Footer />
@@ -144,7 +137,7 @@ function MainApp() {
       <CommunityForumModal
         isOpen={communityModalOpen}
         onClose={() => setCommunityModalOpen(false)}
-        semester={activeSemester || 4}
+        semester={user?.semester || activeSemester || 4}
       />
     </main>
   );
