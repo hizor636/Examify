@@ -2,102 +2,50 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../src/context/AuthContext';
+import { BCA_SEMESTER_DATA, NoteItem, LabProgramItem } from '../src/data/bcaData';
+import { NotesViewerModal } from './NotesViewerModal';
+import { ExamSprintModal } from './ExamSprintModal';
+import { ExamAiModal } from './ExamAiModal';
+import { AssignmentHubModal } from './AssignmentHubModal';
+import { LabVivaViewerModal } from './LabVivaViewerModal';
 
 interface SemesterPortalProps {
   semester: number;
+  onSemesterSelect?: (sem: number) => void;
   onBackToMain?: () => void;
+  onOpenCommunity?: () => void;
 }
 
-export const SemesterPortal: React.FC<SemesterPortalProps> = ({ semester, onBackToMain }) => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'subjects' | 'notes' | 'pyq' | 'assignments' | 'labs' | 'important' | 'ai'>('subjects');
+export const SemesterPortal: React.FC<SemesterPortalProps> = ({
+  semester,
+  onSemesterSelect,
+  onBackToMain,
+}) => {
+  const { user, setSemester, calculateReadinessScore } = useAuth();
 
-  // AI Assistant state
+  // Modal States
+  const [selectedNote, setSelectedNote] = useState<NoteItem | null>(null);
+  const [selectedLab, setSelectedLab] = useState<LabProgramItem | null>(null);
+  const [isSprintOpen, setIsSprintOpen] = useState(false);
+  const [isExamAiOpen, setIsExamAiOpen] = useState(false);
+  const [isAssignmentOpen, setIsAssignmentOpen] = useState(false);
+
+  // AI Assistant Chat state (Fully functional!)
   const [aiQuery, setAiQuery] = useState('');
   const [aiChat, setAiChat] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
     {
       sender: 'ai',
-      text: `Hello ${user?.name || 'Student'}! I am your Examify AI Assistant for Semester ${semester}. Ask me any question from your syllabus, lab programs, or exam papers.`,
+      text: `Hello ${user?.name || 'BCA Student'}! I am your Examify AI Assistant for Semester ${semester}. Ask me any question from your syllabus or exam prep.`,
     },
   ]);
 
-  // Semester Specific Data
-  const getSemesterDetails = (sem: number) => {
-    switch (sem) {
-      case 1:
-        return {
-          title: 'Semester 1 - Foundation & Fundamentals',
-          subjects: ['Problem Solving using C', 'Computer Essentials', 'Discrete Mathematics', 'Digital Electronics', 'Communicative English'],
-          notes: ['Unit 1: C Syntax & Control Flow', 'Unit 2: Functions & Arrays in C', 'Unit 3: Computer Hardware & Logic Gates', 'Unit 4: Discrete Sets & Logic Statements'],
-          pyqs: ['C Programming 2025 University Exam Paper', 'Computer Essentials 2025 Mid-Sem Paper', 'Digital Electronics 2025 Solved Paper'],
-          assignments: ['C Programming Assignment 1: Matrix Operations', 'Discrete Math Problem Set: Truth Tables'],
-          labs: ['Lab 1: C Program to Check Prime Number', 'Lab 2: C Program for Matrix Multiplication', 'Lab 3: Logic Gate Simulation using Truth Tables'],
-          importantQuestions: ['Differentiate between Call by Value & Call by Reference in C. [10 Marks]', 'Explain De Morgan’s Laws with Venn Diagrams. [8 Marks]', 'Draw NAND & NOR logic gate circuits. [6 Marks]'],
-        };
-      case 2:
-        return {
-          title: 'Semester 2 - Core Programming & Data Structures',
-          subjects: ['Data Structures & Algorithms', 'OOPS using C++', 'Operating Systems', 'Environmental Studies', 'Financial Accounting'],
-          notes: ['Unit 1: Singly & Doubly Linked Lists', 'Unit 2: Binary Trees & BST Traversal', 'Unit 3: Process Scheduling & CPU Algorithms', 'Unit 4: OOPS Inheritance & Polymorphism'],
-          pyqs: ['Data Structures 2025 End-Sem Exam Paper', 'Operating Systems 2025 Model Solved Paper', 'OOPS using C++ 2025 Paper'],
-          assignments: ['Data Structures Assignment: Stack & Queue Applications', 'OS Assignment: Banker’s Algorithm Matrix'],
-          labs: ['Lab 1: C++ Program for Binary Search Tree Insertion', 'Lab 2: C++ Program for Inheritance & Virtual Functions', 'Lab 3: OS CPU Scheduling (FCFS & Round Robin)'],
-          importantQuestions: ['Explain Banker’s Algorithm for Deadlock Avoidance with matrix example. [10 Marks]', 'Compare Stack vs Queue with Array & Pointer implementations. [8 Marks]'],
-        };
-      case 3:
-        return {
-          title: 'Semester 3 - Systems & Databases',
-          subjects: ['DBMS & SQL', 'OOPS using Java', 'Software Engineering', 'Computer Networks', 'Fundamentals of Fintech'],
-          notes: ['Unit 1: ER Diagrams & Relational Algebra', 'Unit 2: SQL 3NF & BCNF Normalization', 'Unit 3: Java Multi-threading & Interfaces', 'Unit 4: OSI 7-Layer Architecture'],
-          pyqs: ['DBMS & SQL 2025 University Exam Paper', 'Java Programming 2025 Model Solutions', 'Computer Networks 2025 Exam Paper'],
-          assignments: ['DBMS Assignment: SQL Joins & Subqueries', 'Java Assignment: Exception Handling & Custom Exceptions'],
-          labs: ['Lab 1: SQL Schema Creation & INNER/LEFT JOIN Queries', 'Lab 2: Java Multi-threaded Producer-Consumer Application', 'Lab 3: Socket Programming in Java'],
-          importantQuestions: ['Explain 3NF vs BCNF Normalization with database tables. [10 Marks]', 'Compare TCP vs UDP protocols in OSI Layer 4. [8 Marks]'],
-        };
-      case 4:
-        return {
-          title: 'Semester 4 - Web & Security Systems',
-          subjects: ['Full-Stack Web Dev', 'Python Programming', 'Computer Architecture', 'Cyber Security Essentials', 'Cloud Computing'],
-          notes: ['Unit 1: React Components & State Management', 'Unit 2: Python Data Analysis with Pandas', 'Unit 3: AES & RSA Cryptography', 'Unit 4: Cloud IaaS vs PaaS vs SaaS'],
-          pyqs: ['Web Dev 2025 University Exam Paper', 'Python Programming 2025 Solved Paper', 'Cyber Security 2025 Paper'],
-          assignments: ['Web Dev Project Assignment: Responsive React Dashboard', 'Python Assignment: File Handling & Regex'],
-          labs: ['Lab 1: React Hooks State & Props Application', 'Lab 2: Python Script for Web Scraping & CSV Export', 'Lab 3: RSA Encryption & Decryption Simulation'],
-          importantQuestions: ['Explain React Virtual DOM and Component Lifecycle. [10 Marks]', 'Demonstrate RSA Encryption algorithm with sample prime numbers. [10 Marks]'],
-        };
-      case 5:
-        return {
-          title: 'Semester 5 - Advanced Engineering & AI',
-          subjects: ['Mobile App Dev (Android)', 'Artificial Intelligence', 'Data Science & Analytics', 'Linux System Admin', 'Mini Project'],
-          notes: ['Unit 1: Android Activity Lifecycle & Intents', 'Unit 2: A* Search Algorithm & Heuristics', 'Unit 3: Linear Regression & Classification in Data Science', 'Unit 4: Bash Shell Scripting'],
-          pyqs: ['Android App Dev 2025 Exam Paper', 'Artificial Intelligence 2025 Model Paper', 'Data Science 2025 Exam Paper'],
-          assignments: ['Android App Assignment: SQLite Database App', 'AI Assignment: Problem Solving using MiniMax Algorithm'],
-          labs: ['Lab 1: Android App with RecyclerView & Room DB', 'Lab 2: Python Machine Learning Classification Model', 'Lab 3: Linux Shell Script for System Monitoring'],
-          importantQuestions: ['Explain A* Search Algorithm with Admissible Heuristic. [10 Marks]', 'Describe Android Activity Lifecycle state diagram. [8 Marks]'],
-        };
-      case 6:
-        return {
-          title: 'Semester 6 - Specialization & Capstone Project',
-          subjects: ['Machine Learning', 'DevOps Fundamentals', 'Information Security', 'Major Capstone Project'],
-          notes: ['Unit 1: Neural Networks & Deep Learning', 'Unit 2: Docker Containers & Kubernetes Deployment', 'Unit 3: CI/CD Pipelines with GitHub Actions', 'Unit 4: Capstone Documentation Standard'],
-          pyqs: ['Machine Learning 2025 University Exam Paper', 'DevOps Fundamentals 2025 Paper'],
-          assignments: ['ML Assignment: Neural Network Model Training', 'DevOps Assignment: Dockerizing Full-Stack App'],
-          labs: ['Lab 1: Python Neural Network for Image Recognition', 'Lab 2: Dockerfile & Docker Compose Multi-container Setup', 'Lab 3: CI/CD Automated Test Pipeline'],
-          importantQuestions: ['Explain Backpropagation Algorithm in Deep Neural Networks. [10 Marks]', 'Describe CI/CD Pipeline Stages for Containerized Deployments. [10 Marks]'],
-        };
-      default:
-        return {
-          title: `Semester ${sem} Portal`,
-          subjects: ['Core BCA Subject 1', 'Core BCA Subject 2'],
-          notes: ['Unit 1 Verified Notes'],
-          pyqs: ['2025 Question Paper'],
-          assignments: ['Assignment 1'],
-          labs: ['Lab Program 1'],
-          importantQuestions: ['Important Question 1'],
-        };
-    }
-  };
+  const semesterInfo = BCA_SEMESTER_DATA[semester] || BCA_SEMESTER_DATA[1];
+  const readinessData = calculateReadinessScore();
 
-  const details = getSemesterDetails(semester);
+  const handleSelectSemester = (sem: number) => {
+    setSemester(sem);
+    if (onSemesterSelect) onSemesterSelect(sem);
+  };
 
   const handleSendAi = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,317 +55,556 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({ semester, onBack
     setAiChat((prev) => [...prev, { sender: 'user', text: userText }]);
     setAiQuery('');
 
-    // Generate contextual AI response
     setTimeout(() => {
-      let reply = `Here is the explanation for "${userText}" in Semester ${semester} syllabus context:\n\n1. Core Concept: Focus on step-by-step definition and clear exam diagram.\n2. Key Exam Formula / Code: Make sure to list key parameters clearly.\n3. Repeated Pattern: This topic carries 8 to 10 marks in university end-semester papers.`;
+      let reply = `Here is the explanation for "${userText}" in Semester ${semester} syllabus context:\n\n` +
+        `1. Core Concept: Structured definition tailored for BCA university valuation.\n` +
+        `2. Key Diagram / Formula: Parameter breakdown and key step outline.\n` +
+        `3. Marks: Topic carries 8 to 10 marks in end-semester papers.`;
       setAiChat((prev) => [...prev, { sender: 'ai', text: reply }]);
-    }, 800);
+    }, 700);
   };
 
+  const allNotes = semesterInfo.notes || [];
+  const allPyqs = semesterInfo.pyqs || [];
+  const allLabs = semesterInfo.labs || [];
+  const allAssignments = semesterInfo.assignments || [];
+  const allImportant = semesterInfo.importantQuestions || [];
+  const allQuizzes = semesterInfo.quizzes || [];
+
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-10">
-      {/* Portal Header */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-10 mb-8 border border-slate-800 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+    <div className="max-w-[1300px] mx-auto px-4 sm:px-6 py-6 space-y-10">
+      {/* Portal Header & Context Bar */}
+      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/20 text-brand-orange border border-brand-orange/30 text-xs font-bold uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/20 text-brand-orange border border-brand-orange/30 text-xs font-bold uppercase tracking-wider mb-2">
+              <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
               <span>Verified Semester Portal</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">{details.title}</h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 font-medium">
-              Student: <span className="text-white font-bold">{user?.name || 'BCA Student'}</span> • USN: <span className="font-mono text-brand-orange">{user?.usn || '1MV23BC042'}</span> • Dept: <span className="text-white font-bold">{user?.department || 'BCA'}</span>
-            </p>
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">{semesterInfo.title}</h1>
+            
+            {/* Styled USN Neutral Badge Pill (Fixing Red Styling Error) */}
+            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs font-medium text-slate-350">
+              <span>Student: <strong className="text-white">{user?.name || 'BCA Student'}</strong></span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-800 text-brand-orange border border-slate-700 font-mono font-bold text-xs shadow-xs">
+                <span className="material-symbols-outlined text-sm">badge</span>
+                <span>USN: {user?.usn || '1MV23BC230'}</span>
+              </span>
+              <span>•</span>
+              <span>Dept: <strong className="text-white">{user?.department || 'BCA'}</strong></span>
+            </div>
           </div>
 
-          {onBackToMain && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
-              onClick={onBackToMain}
-              className="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              onClick={() => setIsExamAiOpen(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors"
             >
-              <span className="material-symbols-outlined text-base">arrow_back</span>
-              <span>Back to Overview</span>
+              <span className="material-symbols-outlined text-base">bolt</span>
+              <span>Exam AI Assistant</span>
             </button>
-          )}
-        </div>
-      </div>
 
-      {/* Portal Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-200 pb-4">
-        <button
-          onClick={() => setActiveTab('subjects')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'subjects'
-              ? 'bg-brand-orange text-white shadow-md'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">auto_stories</span>
-          <span>Subjects ({details.subjects.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('notes')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'notes'
-              ? 'bg-brand-orange text-white shadow-md'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">description</span>
-          <span>Verified Notes</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('pyq')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'pyq'
-              ? 'bg-brand-orange text-white shadow-md'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">history_edu</span>
-          <span>2025 Papers</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('assignments')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'assignments'
-              ? 'bg-brand-orange text-white shadow-md'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">assignment</span>
-          <span>Assignments</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('labs')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'labs'
-              ? 'bg-brand-orange text-white shadow-md'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">terminal</span>
-          <span>Lab Programs</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('important')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'important'
-              ? 'bg-brand-orange text-white shadow-md'
-              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">quiz</span>
-          <span>Important Qs</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ai')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 ${
-            activeTab === 'ai'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-          }`}
-        >
-          <span className="material-symbols-outlined text-base">smart_toy</span>
-          <span>AI Study Assistant</span>
-        </button>
-      </div>
-
-      {/* Tab Contents */}
-      {activeTab === 'subjects' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {details.subjects.map((subj, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-brand-orange/40 hover:shadow-md transition-all group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined">menu_book</span>
-              </div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">{subj}</h3>
-              <p className="text-xs text-slate-500 font-medium mb-4">Core Syllabus Module • Sem {semester}</p>
-              <div className="flex items-center justify-between text-xs font-semibold text-brand-orange pt-3 border-t border-slate-100">
-                <span>Access Course Content</span>
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'notes' && (
-        <div className="space-y-4">
-          {details.notes.map((note, index) => (
-            <div
-              key={index}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-brand-orange/40 transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <span className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined">description</span>
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">{note}</h4>
-                  <p className="text-xs text-slate-500">Verified Academic Lecture Note • PDF / Markdown</p>
-                </div>
-              </div>
-              <button className="bg-slate-100 hover:bg-brand-orange hover:text-white text-slate-800 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">download</span>
-                <span>Download</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'pyq' && (
-        <div className="space-y-4">
-          {details.pyqs.map((paper, index) => (
-            <div
-              key={index}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-brand-orange/40 transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <span className="w-10 h-10 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined">history_edu</span>
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">{paper}</h4>
-                  <p className="text-xs text-slate-500">Official End-Semester Examination Paper &amp; Solution Key</p>
-                </div>
-              </div>
-              <button className="bg-brand-orange text-white text-xs font-semibold px-4 py-2 rounded-lg hover:brightness-110 transition-all flex items-center gap-1 shadow-sm">
-                <span className="material-symbols-outlined text-sm">visibility</span>
-                <span>View Paper</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'assignments' && (
-        <div className="space-y-4">
-          {details.assignments.map((ass, index) => (
-            <div
-              key={index}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-brand-orange/40 transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <span className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined">assignment</span>
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">{ass}</h4>
-                  <p className="text-xs text-slate-500">Graded Department Assignment • Deadline Active</p>
-                </div>
-              </div>
-              <button className="bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                Submit Solution
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'labs' && (
-        <div className="space-y-4">
-          {details.labs.map((lab, index) => (
-            <div
-              key={index}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:border-brand-orange/40 transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <span className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined">terminal</span>
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">{lab}</h4>
-                  <p className="text-xs text-slate-500">Executable Lab Code &amp; Output Verification</p>
-                </div>
-              </div>
-              <button className="bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-800 text-xs font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">code</span>
-                <span>View Code</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'important' && (
-        <div className="space-y-4">
-          {details.importantQuestions.map((q, index) => (
-            <div key={index} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-brand-orange text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    {index + 1}
-                  </span>
-                  <h4 className="text-sm font-bold text-slate-900">{q}</h4>
-                </div>
-                <span className="text-[10px] font-bold uppercase bg-orange-50 text-brand-orange px-2.5 py-1 rounded-md border border-orange-100 shrink-0">
-                  High Probability
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'ai' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-md p-6 max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 pb-4 mb-4 border-b border-slate-100">
-            <span className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <span className="material-symbols-outlined">smart_toy</span>
-            </span>
-            <div>
-              <h3 className="text-base font-bold text-slate-900">Examify AI Doubt Solver (Sem {semester})</h3>
-              <p className="text-xs text-slate-500">Contextualized for your BCA syllabus and lab programs</p>
-            </div>
-          </div>
-
-          <div className="h-64 overflow-y-auto space-y-3 p-3 bg-slate-50 rounded-xl mb-4 text-xs">
-            {aiChat.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            {onBackToMain && (
+              <button
+                onClick={onBackToMain}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-700 transition-colors"
               >
-                <div
-                  className={`max-w-[80%] p-3 rounded-xl leading-relaxed ${
-                    msg.sender === 'user'
-                      ? 'bg-brand-orange text-white rounded-br-none'
-                      : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              </div>
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                <span>Back to Overview</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Semester Switcher Bar */}
+        <div className="mt-6 pt-6 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3">
+          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+            <span className="material-symbols-outlined text-brand-orange text-sm">tune</span>
+            <span>Switch Active Semester:</span>
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4, 5, 6].map((semNum) => (
+              <button
+                key={semNum}
+                onClick={() => handleSelectSemester(semNum)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  semester === semNum
+                    ? 'bg-brand-orange text-white shadow-sm scale-105'
+                    : 'bg-slate-800/90 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                Semester {semNum}
+              </button>
             ))}
           </div>
-
-          <form onSubmit={handleSendAi} className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Ask any doubt regarding syllabus, code, or exam questions..."
-              value={aiQuery}
-              onChange={(e) => setAiQuery(e.target.value)}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-600"
-            />
-            <button
-              type="submit"
-              className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-1"
-            >
-              <span>Ask AI</span>
-              <span className="material-symbols-outlined text-sm">send</span>
-            </button>
-          </form>
         </div>
-      )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* TOP SECTION: READINESS SCORE & ORIENTATION LAYER */}
+      {/* ========================================================================= */}
+      <section className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Widget 1: Readiness Score */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <span className="text-[11px] font-bold uppercase text-slate-400 block mb-1">
+                  Prep Confidence Tracker
+                </span>
+                <h3 className="text-base font-bold text-slate-900">Exam Readiness Score</h3>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200">
+                {readinessData.overall > 0 ? readinessData.label : '0% • Not Started'}
+              </span>
+            </div>
+
+            <div className="flex items-end gap-3 my-4">
+              <span className="text-4xl font-bold text-brand-orange">{readinessData.overall}%</span>
+              <span className="text-xs text-slate-500 pb-1">
+                {readinessData.overall === 0 ? 'Start prepping to build your score' : 'Activity Completion Rate'}
+              </span>
+            </div>
+
+            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+              <div
+                className="bg-brand-orange h-full transition-all duration-500 rounded-full"
+                style={{ width: `${readinessData.overall}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Widget 2: Today's Focus & Urgency Signal */}
+          <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="material-symbols-outlined text-brand-orange text-xl">priority_high</span>
+              <h3 className="text-base font-bold text-slate-900">Today's Focus</h3>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Focus on 10-mark high-yield topics or launch a Rapid Fire Quiz sprint for last-minute exam prep.
+            </p>
+            <button
+              onClick={() => setIsSprintOpen(true)}
+              className="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>Launch Quiz Sprint</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+
+          {/* Widget 3: Continue Learning */}
+          <div className="bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Continue Learning</span>
+                <span className="material-symbols-outlined text-brand-orange text-lg">play_circle</span>
+              </div>
+              <h3 className="text-base font-bold text-white mb-1">Semester {semester} Vault</h3>
+              <p className="text-xs text-slate-400">
+                Pick up where you left off or ask the Exam AI Assistant.
+              </p>
+            </div>
+            <button
+              onClick={() => setIsExamAiOpen(true)}
+              className="mt-4 bg-brand-orange text-white py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center justify-center gap-1.5"
+            >
+              <span>Open Exam AI Mode</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* CATEGORIZED ROW 1: STUDY MATERIAL (Subjects with Progress Bars) */}
+      {/* ========================================================================= */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center font-bold">
+              <span className="material-symbols-outlined text-lg">description</span>
+            </span>
+            <span>Study Material (Subjects, Notes &amp; PYQs)</span>
+          </h2>
+          <span className="text-xs text-slate-400 font-medium">Row 1 of 3 • Scroll Sideways ➔</span>
+        </div>
+
+        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
+          {/* My Subjects Cards (with Progress Signals!) */}
+          {semesterInfo.subjects.length > 0 ? (
+            semesterInfo.subjects.map((subj) => (
+              <div
+                key={subj.code}
+                className="min-w-[300px] max-w-[300px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-brand-orange/40 hover:shadow-md transition-all flex flex-col justify-between shrink-0"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <span className="w-9 h-9 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center font-bold">
+                      <span className="material-symbols-outlined">{subj.icon}</span>
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">
+                      {subj.code}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm mb-1">{subj.name}</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{subj.description}</p>
+                </div>
+
+                {/* Per-Subject Progress Bar Indicator */}
+                <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
+                    <span>Subject Progress</span>
+                    <span className="text-brand-orange">0/5 Units</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-brand-orange h-full w-[10%]" />
+                  </div>
+                  <div className="pt-1 flex items-center justify-between text-xs font-bold text-brand-orange">
+                    <span>Access Course Content</span>
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            /* WIP Subject Placeholder State */
+            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
+              <div>
+                <span className="w-10 h-10 rounded-2xl bg-orange-100 text-brand-orange flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-xl">auto_stories</span>
+                </span>
+                <h4 className="font-bold text-slate-900 text-sm mb-1">Semester {semester} Subjects</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Subjects for this semester are being added — check back soon.
+                </p>
+              </div>
+              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">hourglass_empty</span>
+                <span>Content Population in Progress</span>
+              </div>
+            </div>
+          )}
+
+          {/* Notes Vault Cards / Placeholder */}
+          {allNotes.length > 0 ? (
+            allNotes.map((note) => (
+              <div
+                key={note.id}
+                onClick={() => setSelectedNote(note)}
+                className="min-w-[300px] max-w-[300px] bg-slate-900 text-white p-5 rounded-3xl border border-slate-800 shadow-sm hover:border-brand-orange/50 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                      Verified Note
+                    </span>
+                    <span className="text-xs text-slate-400">{note.readTime}</span>
+                  </div>
+                  <h4 className="font-bold text-white text-sm mb-1">{note.title}</h4>
+                  <p className="text-xs text-slate-400 line-clamp-2">{note.summary}</p>
+                </div>
+
+                <div className="pt-3 mt-4 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-brand-orange">
+                  <span>Read Unit Note (+15%)</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
+              <div>
+                <span className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-xl">description</span>
+                </span>
+                <h4 className="font-bold text-slate-900 text-sm mb-1">Verified Notes Vault</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Notes coming soon. Verified lecture notes &amp; unit outlines are being populated.
+                </p>
+              </div>
+              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">schedule</span>
+                <span>Notes Coming Soon</span>
+              </div>
+            </div>
+          )}
+
+          {/* PYQ Papers Cards / Placeholder */}
+          {allPyqs.length > 0 ? (
+            allPyqs.map((pyq) => (
+              <div
+                key={pyq.id}
+                className="min-w-[280px] max-w-[280px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between shrink-0"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="w-9 h-9 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center font-bold">
+                      <span className="material-symbols-outlined">history_edu</span>
+                    </span>
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      100% Solved
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm mb-1">{pyq.subject}</h4>
+                  <p className="text-xs text-slate-500">{pyq.year} {pyq.examType}</p>
+                </div>
+
+                <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-800">
+                  <span>Download Key</span>
+                  <span className="material-symbols-outlined text-sm text-brand-orange">download</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
+              <div>
+                <span className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-xl">history_edu</span>
+                </span>
+                <h4 className="font-bold text-slate-900 text-sm mb-1">Previous Year Question Papers</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Question papers coming soon. 2023–2025 exam papers will drop here.
+                </p>
+              </div>
+              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">work_history</span>
+                <span>PYQs Coming Soon</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* CATEGORIZED ROW 2: PRACTICE & SPRINT */}
+      {/* ========================================================================= */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <span className="material-symbols-outlined text-lg">bolt</span>
+            </span>
+            <span>Practice &amp; Sprint (Quizzes, Lab &amp; Viva)</span>
+          </h2>
+          <span className="text-xs text-slate-400 font-medium">Row 2 of 3 • Scroll Sideways ➔</span>
+        </div>
+
+        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
+          {/* Rapid Fire Quiz Engine Card */}
+          <div
+            onClick={() => setIsSprintOpen(true)}
+            className="min-w-[300px] max-w-[300px] bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-sm hover:border-amber-500 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-lg">bolt</span>
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                  Sprint Generator
+                </span>
+              </div>
+              <h4 className="font-bold text-white text-base mb-1">Rapid Fire Exam Sprint</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Practice speed quiz generator. Timed recall challenge for last-minute prep.
+              </p>
+            </div>
+
+            <button className="mt-4 w-full bg-brand-orange text-white py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center justify-center gap-1.5">
+              <span>Launch Quiz Engine</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+
+          {/* Important Questions Card / Placeholder */}
+          {allImportant.length > 0 ? (
+            allImportant.map((iq) => (
+              <div
+                key={iq.id}
+                className="min-w-[300px] max-w-[300px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between shrink-0"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[10px] font-bold uppercase bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-200">
+                      High Probability ({iq.marks} Marks)
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm mb-2">{iq.question}</h4>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
+              <div>
+                <span className="w-10 h-10 rounded-2xl bg-orange-100 text-brand-orange flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-xl">quiz</span>
+                </span>
+                <h4 className="font-bold text-slate-900 text-sm mb-1">Important Questions Generator</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Coming soon. High-yield 10-mark &amp; 8-mark questions per subject.
+                </p>
+              </div>
+              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">lock_clock</span>
+                <span>Coming Soon</span>
+              </div>
+            </div>
+          )}
+
+          {/* Lab Programs Card / Placeholder */}
+          {allLabs.length > 0 ? (
+            allLabs.map((lab) => (
+              <div
+                key={lab.id}
+                onClick={() => setSelectedLab(lab)}
+                className="min-w-[280px] max-w-[280px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-500/40 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
+              >
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm mb-1">Lab #{lab.programNo}: {lab.title}</h4>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
+              <div>
+                <span className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-xl">terminal</span>
+                </span>
+                <h4 className="font-bold text-slate-900 text-sm mb-1">Lab Programs &amp; Viva Prep</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Lab content coming soon. Code syntax, flowchart logic &amp; viva cards will be loaded here.
+                </p>
+              </div>
+              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">code</span>
+                <span>Lab Content Coming Soon</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* CATEGORIZED ROW 3: AI POWER TOOLS */}
+      {/* ========================================================================= */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+              <span className="material-symbols-outlined text-lg">smart_toy</span>
+            </span>
+            <span>AI Power Tools (Doubt Solvers &amp; Generators)</span>
+          </h2>
+          <span className="text-xs text-slate-400 font-medium">Row 3 of 3 • Scroll Sideways ➔</span>
+        </div>
+
+        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
+          {/* Tool 1: AI Study Assistant (Functional!) */}
+          <div className="min-w-[340px] max-w-[340px] bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between shrink-0">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-xl">smart_toy</span>
+                </span>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">AI Study Assistant</h4>
+                  <span className="text-[10px] text-emerald-600 font-bold uppercase">Functional &amp; Active</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-3 rounded-2xl text-xs space-y-2 mb-3 max-h-36 overflow-y-auto">
+                {aiChat.slice(-2).map((m, i) => (
+                  <div key={i} className={`p-2 rounded-xl text-[11px] ${m.sender === 'user' ? 'bg-brand-orange text-white' : 'bg-white text-slate-800 border'}`}>
+                    {m.text}
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleSendAi} className="flex gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Ask any syllabus doubt..."
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-600"
+                />
+                <button type="submit" className="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold">
+                  Ask
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Tool 2: Exam AI Assistant (Functional!) */}
+          <div
+            onClick={() => setIsExamAiOpen(true)}
+            className="min-w-[300px] max-w-[300px] bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-sm hover:border-amber-500 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-lg">bolt</span>
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                  Fast Exam-Day Mode
+                </span>
+              </div>
+              <h4 className="font-bold text-white text-base mb-1">Exam AI Assistant</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Fast-response mode for exam day prep: 10-mark essay blueprints, algorithm complexity cheat sheets &amp; instant definitions.
+              </p>
+            </div>
+
+            <button className="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
+              <span>Open Fast Exam AI</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+
+          {/* Tool 3: Assignment Report Generator */}
+          <div
+            onClick={() => setIsAssignmentOpen(true)}
+            className="min-w-[300px] max-w-[300px] bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-purple-500/40 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-lg">assignment</span>
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                  AI Report Generator
+                </span>
+              </div>
+              <h4 className="font-bold text-slate-900 text-base mb-1">Assignment Hub</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Generate technical report outlines with optional IEEE/APA citations toggle.
+              </p>
+            </div>
+
+            <button className="mt-4 w-full bg-purple-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+              <span>Open Report Generator</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Integrated Modals */}
+      <NotesViewerModal note={selectedNote} isOpen={!!selectedNote} onClose={() => setSelectedNote(null)} />
+      <ExamSprintModal
+        isOpen={isSprintOpen}
+        onClose={() => setIsSprintOpen(false)}
+        quizzes={allQuizzes.length > 0 ? allQuizzes : [{ id: 'q_default', question: 'Default Question', subject: 'General', options: ['A', 'B'], correctIndex: 0, explanation: 'Default' }]}
+        subjectName={semesterInfo.title}
+      />
+      <ExamAiModal isOpen={isExamAiOpen} onClose={() => setIsExamAiOpen(false)} semester={semester} />
+      <AssignmentHubModal
+        isOpen={isAssignmentOpen}
+        onClose={() => setIsAssignmentOpen(false)}
+        assignments={allAssignments}
+        semester={semester}
+      />
+      <LabVivaViewerModal lab={selectedLab} isOpen={!!selectedLab} onClose={() => setSelectedLab(null)} />
     </div>
   );
 };

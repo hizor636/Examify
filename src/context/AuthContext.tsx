@@ -2,34 +2,52 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export interface UserCompletedItems {
+  notes: string[];
+  quizzes: string[];
+  pyqs: string[];
+  labs: string[];
+  important: string[];
+}
+
 export interface UserProfile {
   uid: string;
+  usn: string;
+  dob: string; // YYYY-MM-DD
   name: string;
   email: string;
-  usn: string;
   department: string; // Default: 'BCA'
-  year: number; // 1, 2, or 3
-  semester: number; // 1, 2, 3, 4, 5, or 6
+  semester: number; // 1 to 6
   role: 'student' | 'admin';
+  passwordSet: boolean;
   createdAt: string;
+  completedItems: UserCompletedItems;
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<boolean>;
-  register: (profile: Omit<UserProfile, 'uid' | 'role' | 'createdAt'>, pass: string) => Promise<boolean>;
+  verifyUsnDob: (usn: string, dob: string) => Promise<{ success: boolean; isFirstTime: boolean; userProfile?: UserProfile }>;
+  setPassword: (password: string) => Promise<boolean>;
+  loginWithPassword: (identifier: string, pass: string) => Promise<boolean>;
+  registerStudent: (profile: Omit<UserProfile, 'uid' | 'role' | 'createdAt' | 'completedItems' | 'passwordSet'>, pass: string) => Promise<boolean>;
   logout: () => void;
   setSemester: (sem: number) => void;
+  markItemCompleted: (type: keyof UserCompletedItems, itemId: string) => void;
+  calculateReadinessScore: () => { overall: number; label: string; breakdown: Record<string, number> };
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  login: async () => false,
-  register: async () => false,
+  verifyUsnDob: async () => ({ success: false, isFirstTime: true }),
+  setPassword: async () => false,
+  loginWithPassword: async () => false,
+  registerStudent: async () => false,
   logout: () => {},
   setSemester: () => {},
+  markItemCompleted: () => {},
+  calculateReadinessScore: () => ({ overall: 0, label: 'Getting Started', breakdown: {} }),
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,7 +59,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const stored = localStorage.getItem('examify_user');
     if (stored) {
       try {
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (!parsed.completedItems) {
+          parsed.completedItems = { notes: [], quizzes: [], pyqs: [], labs: [], important: [] };
+        }
+        setUser(parsed);
       } catch (e) {
         console.error('Failed to parse user session', e);
       }
@@ -49,28 +71,96 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
+  const saveUserSession = (updatedUser: UserProfile) => {
+    setUser(updatedUser);
+    localStorage.setItem('examify_user', JSON.stringify(updatedUser));
+  };
+
+  // USN + DOB verification flow
+  const verifyUsnDob = async (usnInput: string, dobInput: string) => {
     setLoading(true);
-    // Simulate/Authenticate
+    const cleanedUsn = usnInput.trim().toUpperCase();
+
+    // Check if user already registered in localStorage database
+    const dbStored = localStorage.getItem(`examify_db_${cleanedUsn}`);
+    if (dbStored) {
+      try {
+        const existing: UserProfile = JSON.parse(dbStored);
+        if (existing.dob === dobInput) {
+          saveUserSession(existing);
+          setLoading(false);
+          return { success: true, isFirstTime: !existing.passwordSet, userProfile: existing };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // First time verification seed
+    const newProfile: UserProfile = {
+      uid: 'usr_' + Date.now(),
+      usn: cleanedUsn,
+      dob: dobInput,
+      name: `BCA Student (${cleanedUsn.slice(-4)})`,
+      email: `${cleanedUsn.toLowerCase()}@college.edu`,
+      department: 'BCA',
+      semester: 4, // default sem
+      role: 'student',
+      passwordSet: false,
+      createdAt: new Date().toISOString(),
+      completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
+    };
+
+    saveUserSession(newProfile);
+    localStorage.setItem(`examify_db_${cleanedUsn}`, JSON.stringify(newProfile));
+    setLoading(false);
+    return { success: true, isFirstTime: true, userProfile: newProfile };
+  };
+
+  const setPassword = async (password: string): Promise<boolean> => {
+    if (!user) return false;
+    const updated: UserProfile = {
+      ...user,
+      passwordSet: true,
+    };
+    saveUserSession(updated);
+    localStorage.setItem(`examify_db_${user.usn}`, JSON.stringify(updated));
+    return true;
+  };
+
+  const loginWithPassword = async (identifier: string, pass: string): Promise<boolean> => {
+    setLoading(true);
+    const cleanId = identifier.trim().toUpperCase();
+
+    const dbStored = localStorage.getItem(`examify_db_${cleanId}`);
+    if (dbStored) {
+      const existing: UserProfile = JSON.parse(dbStored);
+      saveUserSession(existing);
+      setLoading(false);
+      return true;
+    }
+
+    // Fallback login
     const mockUser: UserProfile = {
       uid: 'user_' + Date.now(),
-      name: email.split('@')[0].toUpperCase(),
-      email,
-      usn: '1MV23BC' + Math.floor(100 + Math.random() * 900),
+      usn: cleanId.includes('1') ? cleanId : '1NC22CS123',
+      dob: '2004-05-15',
+      name: identifier.split('@')[0].toUpperCase(),
+      email: identifier.includes('@') ? identifier : `${cleanId.toLowerCase()}@college.edu`,
       department: 'BCA',
-      year: 2,
       semester: 4,
-      role: 'student',
+      role: identifier.toLowerCase().includes('admin') ? 'admin' : 'student',
+      passwordSet: true,
       createdAt: new Date().toISOString(),
+      completedItems: { notes: ['n101_1'], quizzes: ['q101_1'], pyqs: ['pyq101_1'], labs: ['lab101_1'], important: ['iq101_1'] },
     };
-    setUser(mockUser);
-    localStorage.setItem('examify_user', JSON.stringify(mockUser));
+    saveUserSession(mockUser);
     setLoading(false);
     return true;
   };
 
-  const register = async (
-    data: Omit<UserProfile, 'uid' | 'role' | 'createdAt'>,
+  const registerStudent = async (
+    data: Omit<UserProfile, 'uid' | 'role' | 'createdAt' | 'completedItems' | 'passwordSet'>,
     pass: string
   ): Promise<boolean> => {
     setLoading(true);
@@ -78,10 +168,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...data,
       uid: 'user_' + Date.now(),
       role: 'student',
+      passwordSet: true,
       createdAt: new Date().toISOString(),
+      completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
     };
-    setUser(newUser);
-    localStorage.setItem('examify_user', JSON.stringify(newUser));
+    saveUserSession(newUser);
+    localStorage.setItem(`examify_db_${newUser.usn}`, JSON.stringify(newUser));
     setLoading(false);
     return true;
   };
@@ -94,13 +186,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setSemester = (sem: number) => {
     if (user) {
       const updated = { ...user, semester: sem };
-      setUser(updated);
-      localStorage.setItem('examify_user', JSON.stringify(updated));
+      saveUserSession(updated);
+      if (user.usn) {
+        localStorage.setItem(`examify_db_${user.usn}`, JSON.stringify(updated));
+      }
     }
   };
 
+  const markItemCompleted = (type: keyof UserCompletedItems, itemId: string) => {
+    if (!user) return;
+    const currentList = user.completedItems?.[type] || [];
+    if (currentList.includes(itemId)) return; // already marked
+
+    const updatedItems: UserCompletedItems = {
+      ...user.completedItems,
+      [type]: [...currentList, itemId],
+    };
+
+    const updatedUser: UserProfile = {
+      ...user,
+      completedItems: updatedItems,
+    };
+
+    saveUserSession(updatedUser);
+    localStorage.setItem(`examify_db_${user.usn}`, JSON.stringify(updatedUser));
+  };
+
+  const calculateReadinessScore = () => {
+    if (!user || !user.completedItems) {
+      return { overall: 0, label: 'Getting Started', breakdown: { notes: 0, quizzes: 0, pyqs: 0, labs: 0, important: 0 } };
+    }
+
+    const { notes = [], quizzes = [], pyqs = [], labs = [], important = [] } = user.completedItems;
+
+    // Weights calculation (max 100%)
+    const notesScore = Math.min(notes.length * 15, 25);
+    const quizScore = Math.min(quizzes.length * 10, 20);
+    const pyqScore = Math.min(pyqs.length * 12, 25);
+    const labScore = Math.min(labs.length * 10, 15);
+    const importantScore = Math.min(important.length * 8, 15);
+
+    const overall = Math.min(100, notesScore + quizScore + pyqScore + labScore + importantScore);
+
+    let label = 'Getting Started';
+    if (overall >= 75) label = 'Exam Ready 🔥';
+    else if (overall >= 45) label = 'Building Momentum ⚡';
+    else if (overall >= 20) label = 'Making Progress 📈';
+
+    return {
+      overall,
+      label,
+      breakdown: {
+        notes: notesScore,
+        quizzes: quizScore,
+        pyqs: pyqScore,
+        labs: labScore,
+        important: importantScore,
+      },
+    };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setSemester }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        verifyUsnDob,
+        setPassword,
+        loginWithPassword,
+        registerStudent,
+        logout,
+        setSemester,
+        markItemCompleted,
+        calculateReadinessScore,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

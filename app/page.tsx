@@ -3,30 +3,36 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { Navbar } from '../components/Navbar';
+import { AppNavbar } from '../components/AppNavbar';
 import { HeroSection } from '../components/HeroSection';
 import { TrustStrip } from '../components/TrustStrip';
 import { HowItWorks } from '../components/HowItWorks';
 import { AboutSection } from '../components/AboutSection';
 import { FinalCTA } from '../components/FinalCTA';
 import { Footer } from '../components/Footer';
+import { AppFooter } from '../components/AppFooter';
 import { AuthModal } from '../components/AuthModal';
 import { SemesterPortal } from '../components/SemesterPortal';
+import { UserProfileModal } from '../components/UserProfileModal';
+import { AdminDashboardModal } from '../components/AdminDashboardModal';
+import { CommunityForumModal } from '../components/CommunityForumModal';
 
 function MainApp() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [communityModalOpen, setCommunityModalOpen] = useState(false);
+
+  // Active Semester View (null means show Landing Page)
   const [activeSemester, setActiveSemester] = useState<number | null>(null);
 
-  const scrollToSection = (id: string) => {
-    if (id === 'hero') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+  // Auto-redirect returning logged-in student to dashboard
+  React.useEffect(() => {
+    if (user && activeSemester === null) {
+      setActiveSemester(user.semester || 4);
     }
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  }, [user]);
 
   const handleOpenAuth = () => {
     setAuthModalOpen(true);
@@ -36,51 +42,109 @@ function MainApp() {
     setActiveSemester(sem);
   };
 
+  const handleSelectSemester = (sem: number) => {
+    if (!user) {
+      setAuthModalOpen(true);
+    } else {
+      setActiveSemester(sem);
+    }
+  };
+
   return (
     <main className="relative min-h-screen bg-white text-slate-900 overflow-x-hidden font-sans">
-      {/* Sticky Header with User Status Badge */}
-      <Navbar
-        onGetStarted={handleOpenAuth}
-      />
+      {/* 
+        AUTHENTICATED APP SHELL (AppNavbar) vs PUBLIC MARKETING SHELL (Navbar):
+        Dashboard uses AppNavbar (No marketing links, no Get Started buttons).
+      */}
+      {activeSemester ? (
+        <AppNavbar
+          activeSemester={activeSemester}
+          onSemesterChange={(sem) => setActiveSemester(sem)}
+          onOpenProfile={() => setProfileModalOpen(true)}
+          onOpenAdmin={() => setAdminModalOpen(true)}
+          onOpenCommunity={() => setCommunityModalOpen(true)}
+          onBackToOverview={() => setActiveSemester(null)}
+        />
+      ) : (
+        <Navbar
+          onGetStarted={handleOpenAuth}
+          activeSemester={user?.semester || 4}
+          onSemesterChange={(sem) => handleSelectSemester(sem)}
+          onOpenProfile={() => setProfileModalOpen(true)}
+          onOpenAdmin={() => setAdminModalOpen(true)}
+          onOpenCommunity={() => setCommunityModalOpen(true)}
+        />
+      )}
 
-      <div className="pt-[80px]">
-        {/* If Active Semester Portal is selected, show Portal View */}
+      <div className="pt-[76px]">
         {activeSemester ? (
-          <SemesterPortal
-            semester={activeSemester}
-            onBackToMain={() => setActiveSemester(null)}
-          />
+          /* Main Authenticated Dashboard View & App Footer */
+          <>
+            <SemesterPortal
+              semester={activeSemester}
+              onSemesterSelect={(sem) => setActiveSemester(sem)}
+              onBackToMain={() => setActiveSemester(null)}
+              onOpenCommunity={() => setCommunityModalOpen(true)}
+            />
+            <AppFooter
+              onOpenProfile={() => setProfileModalOpen(true)}
+              onOpenCommunity={() => setCommunityModalOpen(true)}
+            />
+          </>
         ) : (
+          /* Public Marketing Landing Page View & Public Footer */
           <>
             {/* 1. Hero Section */}
             <HeroSection
-              onBrowseSemester={handleOpenAuth}
-              onStartRevising={() => scrollToSection('how-it-works')}
+              onBrowseSemester={() => handleSelectSemester(user?.semester || 4)}
+              onStartRevising={() => {
+                const el = document.getElementById('how-it-works');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
             />
 
             {/* 2. Trust Metrics Strip */}
             <TrustStrip />
 
-            {/* 3. Step-by-Step Workflow */}
+            {/* 3. Workflow */}
             <HowItWorks />
 
-            {/* 4. Student Trust & Institutional Credibility */}
+            {/* 4. Institutional Credibility */}
             <AboutSection />
 
             {/* 5. Final CTA */}
-            <FinalCTA onBrowseSemester={handleOpenAuth} />
+            <FinalCTA onBrowseSemester={() => handleSelectSemester(user?.semester || 4)} />
+
+            {/* Public Marketing Footer */}
+            <Footer />
           </>
         )}
-
-        {/* 6. Footer */}
-        <Footer />
       </div>
 
-      {/* Auth & Registration Modal */}
+      {/* Auth & USN+DOB Verification Modal */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         onSuccessRedirect={handleAuthSuccess}
+      />
+
+      {/* Student Profile Modal */}
+      <UserProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+      />
+
+      {/* Admin Dashboard & Analytics Modal */}
+      <AdminDashboardModal
+        isOpen={adminModalOpen}
+        onClose={() => setAdminModalOpen(false)}
+      />
+
+      {/* Community Discussion Forum Modal */}
+      <CommunityForumModal
+        isOpen={communityModalOpen}
+        onClose={() => setCommunityModalOpen(false)}
+        semester={activeSemester || 4}
       />
     </main>
   );
