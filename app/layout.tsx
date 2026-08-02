@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { AuthProvider } from '../src/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Examify - BCA Academic Engine & Resource Vault',
@@ -35,7 +36,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans text-slate-900 bg-white selection:bg-brand-orange selection:text-white overflow-x-hidden">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

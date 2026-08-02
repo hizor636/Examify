@@ -93,9 +93,5 @@ function MainApp() {
 }
 
 export default function Home() {
-  return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
-  );
+  return <MainApp />;
 }
