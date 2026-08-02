@@ -16,17 +16,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-gutter flex items-center justify-between sticky top-0 z-40">
       <div className="flex items-center gap-8">
-        <nav className="flex gap-6">
-          <button onClick={onOpenCommunity} className="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors">
-            Community Forum
-          </button>
-          <button onClick={onOpenProfile} className="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors">
-            Student Profile
-          </button>
-          <button onClick={onOpenSettings} className="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors">
-            Settings
-          </button>
-        </nav>
+        {/* Spacer for potential breadcrumbs in the future */}
       </div>
       <div className="flex items-center gap-4">
         <button className="p-2 text-on-surface-variant hover:text-on-surface">

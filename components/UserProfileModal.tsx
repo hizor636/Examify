@@ -123,20 +123,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                     <span className="font-bold">{user.department}</span>
                   </div>
 
-                  <div>
-                    <span className="text-slate-400 block uppercase text-[10px] font-bold">Current Active Semester</span>
-                    <select
-                      value={user.semester}
-                      onChange={(e) => setSemester(Number(e.target.value))}
-                      className="mt-1 px-2.5 py-1 rounded-lg border border-slate-300 font-bold bg-white text-xs"
-                    >
-                      {[1, 2, 3, 4, 5, 6].map((sem) => (
-                        <option key={sem} value={sem}>
-                          Semester {sem}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+
 
                   <div>
                     <span className="text-slate-400 block uppercase text-[10px] font-bold">Role</span>
@@ -166,6 +153,24 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                     <span className="text-slate-500 text-[10px]">Optimized for night study sessions</span>
                   </div>
                   <input type="checkbox" className="toggle rounded accent-brand-orange w-4 h-4" />
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-t border-slate-200 mt-2 pt-4">
+                  <div>
+                    <span className="font-bold text-slate-800 block">Update Academic Semester</span>
+                    <span className="text-slate-500 text-[10px]">Permanently updates your student record</span>
+                  </div>
+                  <select
+                    value={user.semester}
+                    onChange={(e) => setSemester(Number(e.target.value))}
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold bg-white text-xs cursor-pointer focus:border-brand-orange focus:outline-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Semester {sem}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
