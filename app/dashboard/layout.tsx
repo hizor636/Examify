@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="relative min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-brand-orange selection:text-white">
-      <DashboardSidebar onGoHome={() => router.push('/')} />
+      <DashboardSidebar onGoHome={() => router.push('/dashboard')} />
       
       <div className="pl-72 flex flex-col min-h-screen">
         <DashboardHeader 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '../components/Navbar';
 import { DashboardSidebar } from '../components/DashboardSidebar';
 import { DashboardHeader } from '../components/DashboardHeader';
@@ -17,26 +18,28 @@ function MainApp() {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  const router = useRouter();
+
   // Auto-redirect logged-in students to dashboard
   React.useEffect(() => {
     if (!loading && user) {
-      window.location.href = '/dashboard';
+      router.replace('/dashboard');
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   const handleOpenAuth = () => {
     setAuthModalOpen(true);
   };
 
   const handleAuthSuccess = (sem: number) => {
-    window.location.href = '/dashboard';
+    router.replace('/dashboard');
   };
 
   const handleSelectSemester = () => {
     if (!user) {
       setAuthModalOpen(true);
     } else {
-      window.location.href = '/dashboard';
+      router.replace('/dashboard');
     }
   };
 
