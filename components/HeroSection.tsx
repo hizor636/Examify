@@ -34,23 +34,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         Access semester-wise notes, 2025 question papers, model answers, and AI-powered doubt support in one clean place.
       </p>
 
-      {/* Search Bar + CTA */}
-      <div className="flex flex-col items-center justify-center gap-4 mb-12 animate-fade-in-delay-3 w-full max-w-xl mx-auto">
-        {/* Search Bar */}
-        <div className="w-full relative group shadow-sm hover:shadow-md transition-shadow rounded-xl">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-orange transition-colors">
-            search
-          </span>
-          <input 
-            type="text" 
-            placeholder="Search notes, questions, topics..." 
-            className="w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/10 outline-none text-base transition-all bg-white"
-            onClick={onBrowseSemester}
-            readOnly
-          />
-        </div>
-
-        {/* Primary CTA */}
+      {/* Primary CTA */}
+      <div className="flex justify-center mb-12 animate-fade-in-delay-3 w-full mx-auto">
         <button
           onClick={onBrowseSemester}
           className="w-full sm:w-auto bg-brand-orange text-white px-10 py-4 rounded-xl font-bold text-base btn-primary-glow flex items-center justify-center gap-2.5 group"
