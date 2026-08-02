@@ -282,7 +282,7 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
                   <span className="material-symbols-outlined">history_edu</span>
                 </div>
                 <h4 className="font-headline-sm text-on-surface mb-2">Previous Year Papers</h4>
-                <p className="text-body-md text-on-surface-variant mb-8">Question papers coming soon. 2023-2025 exam papers will drop here.</p>
+                <p className="text-body-md text-on-surface-variant mb-8">Question papers coming soon. 2025 exam papers will drop here.</p>
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                   <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
                     <span className="material-symbols-outlined text-[16px]">archive</span>

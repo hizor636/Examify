@@ -165,10 +165,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
             {/* Header Title */}
             <div className="mb-6">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-brand-orange border border-orange-200 text-xs font-bold uppercase tracking-wider mb-2">
-                <span className="material-symbols-outlined text-sm">school</span>
-                <span>BCA Student Portal Verification</span>
-              </div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
                 {mode === 'verify' && 'One Step Closer to Passing'}
                 {mode === 'setPassword' && 'Secure Your Student Account'}
@@ -460,7 +456,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                   <span className="material-symbols-outlined text-lg">history_edu</span>
                 </span>
                 <div>
-                  <h4 className="text-xs font-bold text-white">100% Solved 2023–2025 PYQs</h4>
+                  <h4 className="text-xs font-bold text-white">100% Solved 2025 PYQs</h4>
                   <p className="text-[11px] text-slate-400">University examination solutions</p>
                 </div>
               </div>
@@ -481,7 +477,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           <div className="relative z-10 pt-6 border-t border-slate-800 flex items-center justify-between text-[11px] font-medium text-slate-400">
             <div className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-brand-orange text-base">groups</span>
-              <span>1,000+ BCA Students</span>
+              <span>BCA Students</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-emerald-400 text-base">star</span>
