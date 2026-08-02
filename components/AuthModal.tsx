@@ -10,7 +10,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccessRedirect }) => {
-  const { verifyUsnDob, setPassword, loginWithPassword, registerStudent } = useAuth();
+  const { verifyUsnDob, setPassword, loginWithPassword, registerStudent, setSemester } = useAuth();
 
   // Auth Modes: 'verify' (USN+DOB step 1), 'setPassword' (step 2), 'login' (Password login), 'register' (Full setup)
   const [mode, setMode] = useState<'verify' | 'setPassword' | 'login' | 'register'>('verify');
@@ -83,6 +83,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
     const ok = await setPassword(password);
     if (ok) {
+      setSemester(semester);
       triggerSuccessfulRedirect(semester);
     } else {
       setError('Failed to set password. Please try again.');
@@ -259,6 +260,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                    Select Your Semester <span className="text-brand-orange">*</span>
+                  </label>
+                  <select
+                    value={semester}
+                    onChange={(e) => setSemesterInput(Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all bg-white font-bold mb-4"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Semester {sem} (BCA)
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <button
