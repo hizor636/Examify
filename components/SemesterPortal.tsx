@@ -19,6 +19,7 @@ interface SemesterPortalProps {
 export const SemesterPortal: React.FC<SemesterPortalProps> = ({
   semester,
   onBackToMain,
+  onOpenCommunity,
 }) => {
   const { user, calculateReadinessScore } = useAuth();
 
@@ -29,12 +30,12 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
   const [isExamAiOpen, setIsExamAiOpen] = useState(false);
   const [isAssignmentOpen, setIsAssignmentOpen] = useState(false);
 
-  // AI Assistant Chat state (Fully functional!)
+  // AI Assistant Chat state
   const [aiQuery, setAiQuery] = useState('');
   const [aiChat, setAiChat] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
     {
       sender: 'ai',
-      text: `Hello ${user?.name || 'BCA Student'}! I am your Examify AI Assistant for Semester ${semester}. Ask me any question from your syllabus or exam prep.`,
+      text: `Hello ${user?.name || 'BCA Student'}! Ask me any question from your syllabus.`,
     },
   ]);
 
@@ -66,497 +67,430 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
   const allQuizzes = semesterInfo.quizzes || [];
 
   return (
-    <div className="max-w-[1300px] mx-auto px-4 sm:px-6 py-6 space-y-10">
-      {/* Portal Header & Context Bar (Single-Semester Access: No Semester Switcher Row!) */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-orange/20 text-brand-orange border border-brand-orange/30 text-xs font-bold uppercase tracking-wider mb-2">
-              <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
-              <span>Verified Semester Portal</span>
+    <>
+      <main className="flex-1 p-gutter max-w-container-max mx-auto w-full space-y-gutter">
+        {/* Distinct Header Block */}
+        <section className="bg-[#0f172a] rounded-[24px] p-8 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary-fixed-dim font-status-label text-[10px] uppercase tracking-widest">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Verified Semester Portal
+              </div>
+              <h1 className="font-display-lg text-[40px] tracking-tight">
+                {semesterInfo.title.split('—')[0]} <span className="text-slate-500">—</span> {semesterInfo.title.split('—')[1]?.trim() || ''}
+              </h1>
+              <div className="flex flex-wrap items-center gap-6 text-slate-400 text-body-md">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                  Student: {user?.name || 'BCA Student'}
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1 rounded bg-slate-800 border border-primary/20 text-primary text-[12px] font-mono">
+                  <span className="material-symbols-outlined text-[14px]">id_card</span>
+                  USN: {user?.usn || '1NC22CS123'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">school</span>
+                  Dept: {user?.department || 'BCA'}
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">{semesterInfo.title}</h1>
-            
-            {/* Styled USN Neutral Badge Pill */}
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs font-medium text-slate-350">
-              <span>Student: <strong className="text-white">{user?.name || 'BCA Student'}</strong></span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-800 text-brand-orange border border-slate-700 font-mono font-bold text-xs shadow-xs">
-                <span className="material-symbols-outlined text-sm">badge</span>
-                <span>USN: {user?.usn || '1NC22CS123'}</span>
-              </span>
-              <span>•</span>
-              <span>Dept: <strong className="text-white">{user?.department || 'BCA'}</strong></span>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={() => setIsExamAiOpen(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-label-caps text-label-caps uppercase shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+              >
+                <span className="material-symbols-outlined text-[20px]">bolt</span>
+                Exam AI Assistant
+              </button>
+              {onBackToMain && (
+                <button 
+                  onClick={onBackToMain}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition-all border border-white/10 font-label-caps text-label-caps uppercase"
+                >
+                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                  Back to Landing
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Top Action Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+          {/* Readiness Tracker */}
+          <div className="md:col-span-4 p-6 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="font-label-caps text-[10px] text-slate-400 uppercase tracking-widest">Prep Confidence Tracker</p>
+                <h3 className="font-headline-sm text-on-surface">Exam Readiness Score</h3>
+              </div>
+              <div className="px-2 py-1 rounded bg-slate-100 border border-slate-200 text-slate-500 text-[9px] font-bold uppercase">
+                {readinessData.overall > 0 ? readinessData.label : '0% - Not Started'}
+              </div>
+            </div>
+            <div className="mt-8 flex items-center gap-6">
+              <div className="text-[52px] font-bold text-on-surface leading-none">{readinessData.overall}%</div>
+              <div className="flex-1">
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${readinessData.overall}%` }}></div>
+                </div>
+                <p className="mt-2 text-[12px] text-slate-400">
+                  {readinessData.overall === 0 ? 'Start prepping to build your score' : 'Keep up the good work'}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              onClick={() => setIsExamAiOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors"
+          {/* Today's Focus */}
+          <div className="md:col-span-4 p-6 rounded-2xl bg-white border border-slate-200 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined">priority_high</span>
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-headline-sm text-on-surface">Today's Focus</h3>
+                <p className="text-body-md text-on-surface-variant leading-snug">Focus on high-yield exam topics or launch a Rapid Fire Quiz sprint for last-minute prep.</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsSprintOpen(true)}
+              className="w-full mt-6 py-3 rounded-lg bg-[#0f172a] text-white font-label-caps text-label-caps uppercase flex items-center justify-center gap-2 hover:bg-slate-800 transition-all group"
             >
-              <span className="material-symbols-outlined text-base">bolt</span>
-              <span>Exam AI Assistant</span>
+              Launch Quiz Sprint
+              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </button>
+          </div>
 
-            {onBackToMain && (
-              <button
-                onClick={onBackToMain}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-700 transition-colors"
-              >
-                <span className="material-symbols-outlined text-base">arrow_back</span>
-                <span>Back to Landing</span>
-              </button>
+          {/* Continue Learning */}
+          <div className="md:col-span-4 p-6 rounded-2xl bg-[#0f172a] border border-slate-800 flex flex-col justify-between shadow-xl">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="font-label-caps text-[10px] text-primary uppercase tracking-widest">Continue Learning</p>
+                <h3 className="font-headline-sm text-white">Semester {semester} Vault</h3>
+                <p className="text-body-md text-slate-400">Pick up where you left off or ask the AI.</p>
+              </div>
+              <span className="material-symbols-outlined text-primary text-[24px]">play_circle</span>
+            </div>
+            <button 
+              onClick={() => setIsExamAiOpen(true)}
+              className="w-full mt-6 py-4 rounded-lg bg-primary text-white font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform uppercase text-label-caps"
+            >
+              Open Exam AI Mode
+              <span className="material-symbols-outlined text-[20px]">bolt</span>
+            </button>
+          </div>
+        </section>
+
+        {/* Row 1: Study Material */}
+        <section>
+          <div className="flex items-center justify-between mb-stack-md">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary">description</span>
+              <h2 className="font-headline-md text-on-surface">Study Material <span className="text-on-surface-variant font-normal text-body-lg">(Subjects, Notes &amp; PYQs)</span></h2>
+            </div>
+            <div className="text-[12px] text-slate-400 font-status-label flex items-center gap-1 uppercase tracking-wider hidden sm:flex">
+              Row 1 of 3 • Scroll Sideways <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </div>
+          </div>
+          
+          <div className="flex gap-gutter overflow-x-auto no-scrollbar pb-4">
+            {semesterInfo.subjects.length > 0 ? (
+              semesterInfo.subjects.map(subj => (
+                <div key={subj.code} className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined">{subj.icon || 'menu_book'}</span>
+                  </div>
+                  <h4 className="font-headline-sm text-on-surface mb-2">{subj.name}</h4>
+                  <p className="text-body-md text-on-surface-variant mb-8 line-clamp-2">{subj.description}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
+                      <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                      0/5 Units
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined">menu_book</span>
+                </div>
+                <h4 className="font-headline-sm text-on-surface mb-2">Semester {semester} Subjects</h4>
+                <p className="text-body-md text-on-surface-variant mb-8">Subjects for this semester are being added — check back soon.</p>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
+                    <span className="material-symbols-outlined text-[16px]">hourglass_empty</span>
+                    In Progress
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {allNotes.length > 0 ? (
+              allNotes.map(note => (
+                <div key={note.id} onClick={() => setSelectedNote(note)} className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-6">
+                    <span className="material-symbols-outlined">verified_user</span>
+                  </div>
+                  <h4 className="font-headline-sm text-on-surface mb-2">{note.title}</h4>
+                  <p className="text-body-md text-on-surface-variant mb-8 line-clamp-2">{note.summary}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
+                      <span className="material-symbols-outlined text-[16px]">schedule</span>
+                      {note.readTime}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-dashed border-slate-300 hover:border-primary/40 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-6">
+                  <span className="material-symbols-outlined">verified_user</span>
+                </div>
+                <h4 className="font-headline-sm text-on-surface mb-2">Verified Notes Vault</h4>
+                <p className="text-body-md text-on-surface-variant mb-8">Notes coming soon. Verified lecture notes &amp; unit outlines are being populated.</p>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
+                    <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    Coming Soon
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {allPyqs.length > 0 ? (
+              allPyqs.map(pyq => (
+                <div key={pyq.id} className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-tertiary/10 flex items-center justify-center text-tertiary mb-6">
+                    <span className="material-symbols-outlined">history_edu</span>
+                  </div>
+                  <h4 className="font-headline-sm text-on-surface mb-2">{pyq.subject}</h4>
+                  <p className="text-body-md text-on-surface-variant mb-8">{pyq.year} {pyq.examType}</p>
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
+                      <span className="material-symbols-outlined text-[16px]">download</span>
+                      Download
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-dashed border-slate-300 hover:border-primary/40 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-tertiary/10 flex items-center justify-center text-tertiary mb-6">
+                  <span className="material-symbols-outlined">history_edu</span>
+                </div>
+                <h4 className="font-headline-sm text-on-surface mb-2">Previous Year Papers</h4>
+                <p className="text-body-md text-on-surface-variant mb-8">Question papers coming soon. 2023-2025 exam papers will drop here.</p>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase">
+                    <span className="material-symbols-outlined text-[16px]">archive</span>
+                    Coming Soon
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* ========================================================================= */}
-      {/* TOP SECTION: READINESS SCORE & ORIENTATION LAYER */}
-      {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Widget 1: Readiness Score */}
-          <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <span className="text-[11px] font-bold uppercase text-slate-400 block mb-1">
-                  Prep Confidence Tracker
-                </span>
-                <h3 className="text-base font-bold text-slate-900">Exam Readiness Score</h3>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200">
-                {readinessData.overall > 0 ? readinessData.label : '0% • Not Started'}
-              </span>
+        {/* Row 2: Practice & Sprint */}
+        <section>
+          <div className="flex items-center justify-between mb-stack-md">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary">bolt</span>
+              <h2 className="font-headline-md text-on-surface">Practice &amp; Sprint <span className="text-on-surface-variant font-normal text-body-lg">(Quizzes, Lab &amp; Viva)</span></h2>
             </div>
-
-            <div className="flex items-end gap-3 my-4">
-              <span className="text-4xl font-bold text-brand-orange">{readinessData.overall}%</span>
-              <span className="text-xs text-slate-500 pb-1">
-                {readinessData.overall === 0 ? 'Start prepping to build your score' : 'Activity Completion Rate'}
-              </span>
-            </div>
-
-            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-              <div
-                className="bg-brand-orange h-full transition-all duration-500 rounded-full"
-                style={{ width: `${readinessData.overall}%` }}
-              />
+            <div className="text-[12px] text-slate-400 font-status-label flex items-center gap-1 uppercase tracking-wider hidden sm:flex">
+              Row 2 of 3 • Scroll Sideways <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
             </div>
           </div>
 
-          {/* Widget 2: Today's Focus & Urgency Signal */}
-          <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="material-symbols-outlined text-brand-orange text-xl">priority_high</span>
-              <h3 className="text-base font-bold text-slate-900">Today's Focus</h3>
+          <div className="flex gap-gutter overflow-x-auto no-scrollbar pb-4">
+            <div onClick={() => setIsSprintOpen(true)} className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-[#0f172a] border border-primary/30 shadow-2xl relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+              <div className="flex items-center gap-2 mb-6 relative z-10">
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
+                  <span className="material-symbols-outlined">bolt</span>
+                </div>
+                <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Sprint Generator</span>
+              </div>
+              <h4 className="font-headline-sm text-white mb-2 relative z-10">Rapid Fire Exam Sprint</h4>
+              <p className="text-body-md text-slate-400 mb-8 relative z-10">Practice speed quiz generator. Timed recall challenge for last-minute prep.</p>
+              <button className="w-full py-3 rounded-lg bg-primary text-white font-bold flex items-center justify-center gap-2 text-[12px] uppercase relative z-10">
+                Launch Quiz Engine
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Focus on high-yield exam topics or launch a Rapid Fire Quiz sprint for last-minute prep.
-            </p>
-            <button
-              onClick={() => setIsSprintOpen(true)}
-              className="w-full bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5"
-            >
-              <span>Launch Quiz Sprint</span>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
+
+            {allImportant.length > 0 ? (
+              allImportant.map((iq) => (
+                <div key={iq.id} className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 mb-6">
+                      <span className="material-symbols-outlined text-[24px]">quiz</span>
+                    </div>
+                    <h4 className="font-headline-sm text-on-surface mb-2">{iq.question}</h4>
+                    <p className="text-body-md text-on-surface-variant mb-8">{iq.marks} Marks • High Probability</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-dashed border-slate-300 hover:border-primary/40 transition-all shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 mb-6">
+                  <span className="material-symbols-outlined text-[24px]">quiz</span>
+                </div>
+                <h4 className="font-headline-sm text-on-surface mb-2">Important Questions</h4>
+                <p className="text-body-md text-on-surface-variant mb-8">Coming soon. High-yield 10-mark &amp; 5-mark questions per subject.</p>
+                <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase pt-4 border-t border-slate-100">
+                  <span className="material-symbols-outlined text-[16px]">lock</span>
+                  Coming Soon
+                </div>
+              </div>
+            )}
+
+            {allLabs.length > 0 ? (
+              allLabs.map((lab) => (
+                <div key={lab.id} onClick={() => setSelectedLab(lab)} className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 mb-6">
+                    <span className="material-symbols-outlined text-[24px]">terminal</span>
+                  </div>
+                  <h4 className="font-headline-sm text-on-surface mb-2">Lab #{lab.programNo}</h4>
+                  <p className="text-body-md text-on-surface-variant mb-8 line-clamp-2">{lab.title}</p>
+                </div>
+              ))
+            ) : (
+              <div className="min-w-[320px] max-w-[320px] group cursor-pointer p-6 rounded-[32px] bg-white border border-dashed border-slate-300 hover:border-primary/40 transition-all shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 mb-6">
+                  <span className="material-symbols-outlined text-[24px]">terminal</span>
+                </div>
+                <h4 className="font-headline-sm text-on-surface mb-2">Lab Programs &amp; Viva Prep</h4>
+                <p className="text-body-md text-on-surface-variant mb-8">Lab content coming soon. Code syntax and viva cards will be loaded here.</p>
+                <div className="flex items-center gap-2 text-slate-400 text-[11px] font-status-label uppercase pt-4 border-t border-slate-100">
+                  <span className="material-symbols-outlined text-[16px]">code</span>
+                  Coming Soon
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Row 3: AI Power Tools */}
+        <section>
+          <div className="flex items-center justify-between mb-stack-md">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary">psychology</span>
+              <h2 className="font-headline-md text-on-surface">AI Power Tools <span className="text-on-surface-variant font-normal text-body-lg">(Doubt Solvers &amp; Generators)</span></h2>
+            </div>
+            <div className="text-[12px] text-slate-400 font-status-label flex items-center gap-1 uppercase tracking-wider hidden sm:flex">
+              Row 3 of 3 • Scroll Sideways <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </div>
           </div>
 
-          {/* Widget 3: Continue Learning */}
-          <div className="bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-sm flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Continue Learning</span>
-                <span className="material-symbols-outlined text-brand-orange text-lg">play_circle</span>
-              </div>
-              <h3 className="text-base font-bold text-white mb-1">Semester {semester} Vault</h3>
-              <p className="text-xs text-slate-400">
-                Pick up where you left off or ask the Exam AI Assistant.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsExamAiOpen(true)}
-              className="mt-4 bg-brand-orange text-white py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center justify-center gap-1.5"
-            >
-              <span>Open Exam AI Mode</span>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* CATEGORIZED ROW 1: STUDY MATERIAL */}
-      {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center font-bold">
-              <span className="material-symbols-outlined text-lg">description</span>
-            </span>
-            <span>Study Material (Subjects, Notes &amp; PYQs)</span>
-          </h2>
-          <span className="text-xs text-slate-400 font-medium">Row 1 of 3 • Scroll Sideways ➔</span>
-        </div>
-
-        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
-          {/* My Subjects Cards / WIP Placeholder */}
-          {semesterInfo.subjects.length > 0 ? (
-            semesterInfo.subjects.map((subj) => (
-              <div
-                key={subj.code}
-                className="min-w-[300px] max-w-[300px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-brand-orange/40 hover:shadow-md transition-all flex flex-col justify-between shrink-0"
-              >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+            {/* AI Study Assistant */}
+            <div className="group p-6 rounded-[32px] bg-white border border-slate-200 hover:border-primary/40 transition-all shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[24px]">smart_toy</span>
+                </div>
                 <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="w-9 h-9 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center font-bold">
-                      <span className="material-symbols-outlined">{subj.icon}</span>
-                    </span>
-                    <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">
-                      {subj.code}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-sm mb-1">{subj.name}</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{subj.description}</p>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
-                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
-                    <span>Subject Progress</span>
-                    <span className="text-brand-orange">0/5 Units</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-brand-orange h-full w-[10%]" />
-                  </div>
-                  <div className="pt-1 flex items-center justify-between text-xs font-bold text-brand-orange">
-                    <span>Access Course Content</span>
-                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </div>
+                  <h4 className="font-headline-sm text-on-surface text-[16px]">AI Study Assistant</h4>
+                  <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest">Active</span>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
-              <div>
-                <span className="w-10 h-10 rounded-2xl bg-orange-100 text-brand-orange flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined text-xl">auto_stories</span>
-                </span>
-                <h4 className="font-bold text-slate-900 text-sm mb-1">Semester {semester} Subjects</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Subjects for this semester are being added — check back soon.
-                </p>
-              </div>
-              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">hourglass_empty</span>
-                <span>Content Population in Progress</span>
-              </div>
-            </div>
-          )}
-
-          {/* Notes Vault Cards / WIP Placeholder */}
-          {allNotes.length > 0 ? (
-            allNotes.map((note) => (
-              <div
-                key={note.id}
-                onClick={() => setSelectedNote(note)}
-                className="min-w-[300px] max-w-[300px] bg-slate-900 text-white p-5 rounded-3xl border border-slate-800 shadow-sm hover:border-brand-orange/50 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
-              >
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                      Verified Note
-                    </span>
-                    <span className="text-xs text-slate-400">{note.readTime}</span>
-                  </div>
-                  <h4 className="font-bold text-white text-sm mb-1">{note.title}</h4>
-                  <p className="text-xs text-slate-400 line-clamp-2">{note.summary}</p>
-                </div>
-
-                <div className="pt-3 mt-4 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-brand-orange">
-                  <span>Read Unit Note (+15%)</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
-              <div>
-                <span className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined text-xl">description</span>
-                </span>
-                <h4 className="font-bold text-slate-900 text-sm mb-1">Verified Notes Vault</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Notes coming soon. Verified lecture notes &amp; unit outlines are being populated.
-                </p>
-              </div>
-              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">schedule</span>
-                <span>Notes Coming Soon</span>
-              </div>
-            </div>
-          )}
-
-          {/* PYQ Papers Cards / WIP Placeholder */}
-          {allPyqs.length > 0 ? (
-            allPyqs.map((pyq) => (
-              <div
-                key={pyq.id}
-                className="min-w-[280px] max-w-[280px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between shrink-0"
-              >
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="w-9 h-9 rounded-xl bg-orange-50 text-brand-orange flex items-center justify-center font-bold">
-                      <span className="material-symbols-outlined">history_edu</span>
-                    </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      100% Solved
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-sm mb-1">{pyq.subject}</h4>
-                  <p className="text-xs text-slate-500">{pyq.year} {pyq.examType}</p>
-                </div>
-
-                <div className="pt-3 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-800">
-                  <span>Download Key</span>
-                  <span className="material-symbols-outlined text-sm text-brand-orange">download</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
-              <div>
-                <span className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined text-xl">history_edu</span>
-                </span>
-                <h4 className="font-bold text-slate-900 text-sm mb-1">Previous Year Question Papers</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Question papers coming soon. 2023–2025 exam papers will drop here.
-                </p>
-              </div>
-              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">work_history</span>
-                <span>PYQs Coming Soon</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* CATEGORIZED ROW 2: PRACTICE & SPRINT */}
-      {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <span className="material-symbols-outlined text-lg">bolt</span>
-            </span>
-            <span>Practice &amp; Sprint (Quizzes, Lab &amp; Viva)</span>
-          </h2>
-          <span className="text-xs text-slate-400 font-medium">Row 2 of 3 • Scroll Sideways ➔</span>
-        </div>
-
-        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
-          {/* Rapid Fire Quiz Engine Card */}
-          <div
-            onClick={() => setIsSprintOpen(true)}
-            className="min-w-[300px] max-w-[300px] bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-sm hover:border-amber-500 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
-          >
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-lg">bolt</span>
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                  Sprint Generator
-                </span>
-              </div>
-              <h4 className="font-bold text-white text-base mb-1">Rapid Fire Exam Sprint</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Practice speed quiz generator. Timed recall challenge for last-minute prep.
-              </p>
-            </div>
-
-            <button className="mt-4 w-full bg-brand-orange text-white py-2.5 rounded-xl font-bold text-xs btn-primary-glow flex items-center justify-center gap-1.5">
-              <span>Launch Quiz Engine</span>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
-          </div>
-
-          {/* Important Questions Card / Placeholder */}
-          {allImportant.length > 0 ? (
-            allImportant.map((iq) => (
-              <div
-                key={iq.id}
-                className="min-w-[300px] max-w-[300px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between shrink-0"
-              >
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-bold uppercase bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-200">
-                      High Probability ({iq.marks} Marks)
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm mb-2">{iq.question}</h4>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
-              <div>
-                <span className="w-10 h-10 rounded-2xl bg-orange-100 text-brand-orange flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined text-xl">quiz</span>
-                </span>
-                <h4 className="font-bold text-slate-900 text-sm mb-1">Important Questions Generator</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Coming soon. High-yield 10-mark &amp; 8-mark questions per subject.
-                </p>
-              </div>
-              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">lock_clock</span>
-                <span>Coming Soon</span>
-              </div>
-            </div>
-          )}
-
-          {/* Lab Programs Card / Placeholder */}
-          {allLabs.length > 0 ? (
-            allLabs.map((lab) => (
-              <div
-                key={lab.id}
-                onClick={() => setSelectedLab(lab)}
-                className="min-w-[280px] max-w-[280px] bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:border-indigo-500/40 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
-              >
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm mb-1">Lab #{lab.programNo}: {lab.title}</h4>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="min-w-[300px] max-w-[300px] bg-slate-50/90 p-6 rounded-3xl border border-dashed border-slate-300 shadow-xs flex flex-col justify-between shrink-0">
-              <div>
-                <span className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined text-xl">terminal</span>
-                </span>
-                <h4 className="font-bold text-slate-900 text-sm mb-1">Lab Programs &amp; Viva Prep</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Lab content coming soon. Code syntax, flowchart logic &amp; viva cards will be loaded here.
-                </p>
-              </div>
-              <div className="pt-3 mt-4 border-t border-slate-200 text-[11px] font-bold text-slate-400 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">code</span>
-                <span>Lab Content Coming Soon</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* CATEGORIZED ROW 3: AI POWER TOOLS */}
-      {/* ========================================================================= */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <span className="material-symbols-outlined text-lg">smart_toy</span>
-            </span>
-            <span>AI Power Tools (Doubt Solvers &amp; Generators)</span>
-          </h2>
-          <span className="text-xs text-slate-400 font-medium">Row 3 of 3 • Scroll Sideways ➔</span>
-        </div>
-
-        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-3 pt-1">
-          {/* Tool 1: AI Study Assistant (Functional!) */}
-          <div className="min-w-[340px] max-w-[340px] bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between shrink-0">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-xl">smart_toy</span>
-                </span>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm">AI Study Assistant</h4>
-                  <span className="text-[10px] text-emerald-600 font-bold uppercase">Functional &amp; Active</span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 p-3 rounded-2xl text-xs space-y-2 mb-3 max-h-36 overflow-y-auto">
+              <div className="bg-slate-50 p-4 rounded-2xl text-[12px] text-on-surface-variant italic leading-relaxed space-y-2 max-h-36 overflow-y-auto mb-4 border border-slate-100">
                 {aiChat.slice(-2).map((m, i) => (
-                  <div key={i} className={`p-2 rounded-xl text-[11px] ${m.sender === 'user' ? 'bg-brand-orange text-white' : 'bg-white text-slate-800 border'}`}>
+                  <div key={i} className={`p-2 rounded-xl text-[11px] ${m.sender === 'user' ? 'bg-primary text-white not-italic font-medium' : 'bg-white text-slate-800 border border-slate-100'}`}>
                     {m.text}
                   </div>
                 ))}
               </div>
-
-              <form onSubmit={handleSendAi} className="flex gap-1.5">
-                <input
-                  type="text"
-                  placeholder="Ask any syllabus doubt..."
+              <form onSubmit={handleSendAi} className="flex gap-2">
+                <input 
+                  type="text" 
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-emerald-600"
+                  placeholder="Ask any doubt..." 
+                  className="flex-1 bg-white border border-slate-200 rounded-lg px-4 py-2 text-[12px] text-on-surface outline-none focus:border-primary transition-all"
                 />
-                <button type="submit" className="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold">
-                  Ask
-                </button>
+                <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-[11px] uppercase hover:bg-green-700 transition-colors">Ask</button>
               </form>
             </div>
-          </div>
 
-          {/* Tool 2: Exam AI Assistant (Functional!) */}
-          <div
-            onClick={() => setIsExamAiOpen(true)}
-            className="min-w-[300px] max-w-[300px] bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-sm hover:border-amber-500 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
-          >
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-lg">bolt</span>
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                  Fast Exam-Day Mode
-                </span>
+            {/* Exam AI Assistant (Fast Mode) */}
+            <div onClick={() => setIsExamAiOpen(true)} className="group cursor-pointer p-6 rounded-[32px] bg-[#0f172a] border border-primary/30 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
+                    <span className="material-symbols-outlined text-[24px]">bolt</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Fast Exam-Day Mode</span>
+                    <h4 className="font-headline-sm text-white text-[18px]">Exam AI Assistant</h4>
+                  </div>
+                </div>
+                <p className="text-body-md text-slate-400 mb-8 leading-relaxed">Fast-response mode for exam day prep: 10-mark blueprints &amp; instant definitions.</p>
               </div>
-              <h4 className="font-bold text-white text-base mb-1">Exam AI Assistant</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Fast-response mode for exam day prep: 10-mark essay blueprints, algorithm complexity cheat sheets &amp; instant definitions.
-              </p>
+              <button className="w-full py-4 rounded-lg bg-primary text-white font-bold flex items-center justify-center gap-2 text-[12px] uppercase shadow-lg shadow-primary/20">
+                Open Fast Exam AI
+                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              </button>
             </div>
 
-            <button className="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5">
-              <span>Open Fast Exam AI</span>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </button>
-          </div>
-
-          {/* Tool 3: Assignment Report Generator */}
-          <div
-            onClick={() => setIsAssignmentOpen(true)}
-            className="min-w-[300px] max-w-[300px] bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:border-purple-500/40 transition-all flex flex-col justify-between shrink-0 cursor-pointer"
-          >
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-                  <span className="material-symbols-outlined text-lg">assignment</span>
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
-                  AI Report Generator
-                </span>
+            {/* Assignment Hub */}
+            <div onClick={() => setIsAssignmentOpen(true)} className="group cursor-pointer p-6 rounded-[32px] bg-white border border-slate-200 hover:border-secondary/40 transition-all shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                    <span className="material-symbols-outlined text-[24px]">description</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-secondary uppercase tracking-widest">AI Report Generator</span>
+                    <h4 className="font-headline-sm text-on-surface text-[18px]">Assignment Hub</h4>
+                  </div>
+                </div>
+                <p className="text-body-md text-on-surface-variant mb-8 leading-relaxed">Generate technical report outlines with optional IEEE/APA citations.</p>
               </div>
-              <h4 className="font-bold text-slate-900 text-base mb-1">Assignment Hub</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Generate technical report outlines with optional IEEE/APA citations toggle.
-              </p>
+              <button className="w-full py-3 rounded-lg bg-secondary text-white font-bold flex items-center justify-center gap-2 text-[12px] uppercase group-hover:shadow-lg group-hover:shadow-secondary/20 transition-all">
+                Open Generator
+                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              </button>
             </div>
+          </div>
+        </section>
 
-            <button className="mt-4 w-full bg-purple-700 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
-              <span>Open Report Generator</span>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+        {/* Decorative Footer */}
+        <div className="pt-section-gap text-center space-y-4">
+          <p className="font-status-label text-status-label text-slate-400 uppercase tracking-[0.2em]">Academic Precision • Digital Excellence • Examify 2024</p>
+          <div className="flex justify-center gap-8">
+            <button onClick={onOpenCommunity} className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-[12px]">
+              <span className="material-symbols-outlined text-[16px]">forum</span> Community
             </button>
+            <div className="flex items-center gap-2 text-slate-400 text-[12px]">
+              <span className="material-symbols-outlined text-[16px]">account_circle</span> Profile
+            </div>
+            <div className="flex items-center gap-2 text-slate-400 text-[12px]">
+              <span className="material-symbols-outlined text-[16px]">settings</span> Settings
+            </div>
           </div>
         </div>
-      </section>
+      </main>
+
+      {/* Real Footer for App Shell */}
+      <footer className="w-full bg-white py-6 px-gutter border-t border-slate-200 mt-stack-lg">
+        <div className="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center text-status-label font-status-label text-slate-400 text-[11px] gap-4">
+          <p>© 2024 Examify - Built for BCA Academic Excellence.</p>
+          <div className="flex items-center gap-4 uppercase tracking-widest">
+            <div className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px] text-green-500">verified</span>
+              Verified Resources
+            </div>
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+            Exam-Oriented Engine
+          </div>
+        </div>
+      </footer>
 
       {/* Integrated Modals */}
       <NotesViewerModal note={selectedNote} isOpen={!!selectedNote} onClose={() => setSelectedNote(null)} />
@@ -574,6 +508,6 @@ export const SemesterPortal: React.FC<SemesterPortalProps> = ({
         semester={semester}
       />
       <LabVivaViewerModal lab={selectedLab} isOpen={!!selectedLab} onClose={() => setSelectedLab(null)} />
-    </div>
+    </>
   );
 };

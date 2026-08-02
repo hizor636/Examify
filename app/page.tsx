@@ -3,14 +3,14 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { Navbar } from '../components/Navbar';
-import { AppNavbar } from '../components/AppNavbar';
+import { DashboardSidebar } from '../components/DashboardSidebar';
+import { DashboardHeader } from '../components/DashboardHeader';
 import { HeroSection } from '../components/HeroSection';
 import { TrustStrip } from '../components/TrustStrip';
 import { HowItWorks } from '../components/HowItWorks';
 import { AboutSection } from '../components/AboutSection';
 import { FinalCTA } from '../components/FinalCTA';
 import { Footer } from '../components/Footer';
-import { AppFooter } from '../components/AppFooter';
 import { AuthModal } from '../components/AuthModal';
 import { SemesterPortal } from '../components/SemesterPortal';
 import { UserProfileModal } from '../components/UserProfileModal';
@@ -50,68 +50,72 @@ function MainApp() {
     }
   };
 
+  if (activeSemester) {
+    return (
+      <main className="relative min-h-screen bg-surface-dim font-body-md text-on-background overflow-x-hidden selection:bg-primary selection:text-white">
+        <DashboardSidebar />
+        
+        <div className="pl-72 flex flex-col min-h-screen">
+          <DashboardHeader 
+            onOpenProfile={() => setProfileModalOpen(true)}
+            onOpenCommunity={() => setCommunityModalOpen(true)}
+            onOpenSettings={() => setProfileModalOpen(true)}
+          />
+          
+          <SemesterPortal
+            semester={user?.semester || activeSemester || 4}
+            onBackToMain={() => setActiveSemester(null)}
+            onOpenCommunity={() => setCommunityModalOpen(true)}
+          />
+        </div>
+
+        {/* Student Profile Modal */}
+        <UserProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+        />
+
+        {/* Community Discussion Forum Modal */}
+        <CommunityForumModal
+          isOpen={communityModalOpen}
+          onClose={() => setCommunityModalOpen(false)}
+          semester={user?.semester || activeSemester || 4}
+        />
+      </main>
+    );
+  }
+
+  // Public Landing Page
   return (
     <main className="relative min-h-screen bg-white text-slate-900 overflow-x-hidden font-sans">
-      {/* 
-        STRICT SHELL SEPARATION:
-        - Dashboard uses AppNavbar (App Shell: Community + Profile only, ZERO marketing links, ZERO semester tabs).
-        - Landing Page uses Navbar (Public Shell: Marketing links + Get Started CTA).
-      */}
-      {activeSemester ? (
-        <AppNavbar
-          onOpenProfile={() => setProfileModalOpen(true)}
-          onOpenAdmin={() => setAdminModalOpen(true)}
-          onOpenCommunity={() => setCommunityModalOpen(true)}
-          onBackToOverview={() => setActiveSemester(null)}
-        />
-      ) : (
-        <Navbar
-          onGetStarted={handleOpenAuth}
-        />
-      )}
+      <Navbar
+        onGetStarted={handleOpenAuth}
+      />
 
       <div className="pt-[76px]">
-        {activeSemester ? (
-          /* Main Authenticated Dashboard View (Single-Semester Access: user's current semester) */
-          <>
-            <SemesterPortal
-              semester={user?.semester || activeSemester || 4}
-              onBackToMain={() => setActiveSemester(null)}
-              onOpenCommunity={() => setCommunityModalOpen(true)}
-            />
-            <AppFooter
-              onOpenProfile={() => setProfileModalOpen(true)}
-              onOpenCommunity={() => setCommunityModalOpen(true)}
-            />
-          </>
-        ) : (
-          /* Public Marketing Landing Page View & Public Footer */
-          <>
-            {/* 1. Hero Section */}
-            <HeroSection
-              onBrowseSemester={handleSelectSemester}
-              onStartRevising={() => {
-                const el = document.getElementById('how-it-works');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-            />
+        {/* 1. Hero Section */}
+        <HeroSection
+          onBrowseSemester={handleSelectSemester}
+          onStartRevising={() => {
+            const el = document.getElementById('how-it-works');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
 
-            {/* 2. Trust Metrics Strip */}
-            <TrustStrip />
+        {/* 2. Trust Metrics Strip */}
+        <TrustStrip />
 
-            {/* 3. Workflow */}
-            <HowItWorks />
+        {/* 3. Workflow */}
+        <HowItWorks />
 
-            {/* 4. Institutional Credibility */}
-            <AboutSection />
+        {/* 4. Institutional Credibility */}
+        <AboutSection />
 
-            {/* 5. Final CTA */}
-            <FinalCTA onBrowseSemester={handleSelectSemester} />
+        {/* 5. Final CTA */}
+        <FinalCTA onBrowseSemester={handleSelectSemester} />
 
-            {/* Public Marketing Footer */}
-            <Footer />
-          </>
-        )}
+        {/* Public Marketing Footer */}
+        <Footer />
       </div>
 
       {/* Auth & USN+DOB Verification Modal */}
@@ -119,25 +123,6 @@ function MainApp() {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         onSuccessRedirect={handleAuthSuccess}
-      />
-
-      {/* Student Profile Modal */}
-      <UserProfileModal
-        isOpen={profileModalOpen}
-        onClose={() => setProfileModalOpen(false)}
-      />
-
-      {/* Admin Dashboard & Analytics Modal */}
-      <AdminDashboardModal
-        isOpen={adminModalOpen}
-        onClose={() => setAdminModalOpen(false)}
-      />
-
-      {/* Community Discussion Forum Modal */}
-      <CommunityForumModal
-        isOpen={communityModalOpen}
-        onClose={() => setCommunityModalOpen(false)}
-        semester={user?.semester || activeSemester || 4}
       />
     </main>
   );
