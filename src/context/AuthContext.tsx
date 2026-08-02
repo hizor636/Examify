@@ -45,21 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         console.error('Failed to parse user session', e);
       }
-    } else {
-      // Default Demo Student Profile
-      const demoUser: UserProfile = {
-        uid: 'demo_bca_student_01',
-        name: 'Alex Kumar',
-        email: 'alex.bca@college.edu',
-        usn: '1MV23BC042',
-        department: 'BCA',
-        year: 2,
-        semester: 4,
-        role: 'student',
-        createdAt: new Date().toISOString(),
-      };
-      setUser(demoUser);
-      localStorage.setItem('examify_user', JSON.stringify(demoUser));
     }
     setLoading(false);
   }, []);
