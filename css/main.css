@@ -1,0 +1,141 @@
+/* 
+ * NIGHT-SEEKER CORE DESIGN SYSTEM & THEME ENGINE
+ * Main CSS Tokens, Typography & Base Resets
+ */
+
+:root {
+    /* Light Theme Color Tokens */
+    --bg-canvas: #F8FAFC;
+    --bg-surface: rgba(255, 255, 255, 0.85);
+    --bg-surface-solid: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #FFFFFF;
+    --bg-subtle: #F1F5F9;
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --text-subtle: #94A3B8;
+    --border-light: #E2E8F0;
+    --border-hover: rgba(124, 58, 237, 0.3);
+    --accent-purple: #7C3AED;
+    --accent-purple-light: #A855F7;
+    --accent-blue: #2563EB;
+    --accent-cyan: #38BDF8;
+    --accent-amber: #FF801E;
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.03);
+    --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.05);
+    --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.08);
+    --shadow-glass-inset: inset 0px 2px 4px 0px rgba(255, 255, 255, 0.9);
+    --glow-cyan-opacity: 0.16;
+    --glow-violet-opacity: 0.15;
+    --terminal-bg: #0F172A;
+    --terminal-text: #E2E8F0;
+}
+
+[data-theme="dark"] {
+    /* Dark Theme Variables */
+    --bg-canvas: #0B0F17;
+    --bg-surface: rgba(15, 23, 42, 0.85);
+    --bg-surface-solid: #0F172A;
+    --bg-card: #1E293B;
+    --bg-card-hover: #1E293B;
+    --bg-subtle: #1E293B;
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --text-subtle: #64748B;
+    --border-light: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(168, 85, 247, 0.4);
+    --accent-purple: #A855F7;
+    --accent-purple-light: #C084FC;
+    --accent-blue: #38BDF8;
+    --accent-cyan: #38BDF8;
+    --accent-amber: #F97316;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+    --shadow-glass-inset: inset 0px 1px 2px 0px rgba(255, 255, 255, 0.15);
+    --glow-cyan-opacity: 0.25;
+    --glow-violet-opacity: 0.25;
+    --terminal-bg: #020617;
+    --terminal-text: #F1F5F9;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    background-color: var(--bg-canvas);
+    color: var(--text-main);
+    overflow-x: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Canvas Wrapper */
+.canvas-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1600px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background-color: var(--bg-canvas);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease;
+}
+
+/* Ambient Lighting Diffusion Layer */
+.ambient-background {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.glow-ellipse-cyan {
+    position: absolute;
+    top: -180px;
+    left: -180px;
+    width: 850px;
+    height: 850px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, #60B1FF 0%, #319AFF 70%, transparent 100%);
+    opacity: var(--glow-cyan-opacity);
+    filter: blur(190px);
+    will-change: filter;
+}
+
+.glow-ellipse-violet {
+    position: absolute;
+    top: -60px;
+    left: 220px;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, #A855F7 0%, #7C3AED 60%, transparent 100%);
+    opacity: var(--glow-violet-opacity);
+    filter: blur(210px);
+    will-change: filter;
+}
+
+/* Main Container Layout */
+.main-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0 40px 40px 40px;
+}

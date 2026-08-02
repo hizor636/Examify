@@ -1,0 +1,191 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+interface NavbarProps {
+  onOpenLogin?: () => void;
+  onGetStarted?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('hero');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+
+      // Section scroll tracking
+      const sections = ['hero', 'how-it-works', 'why-examify', 'about'];
+      const scrollPos = window.scrollY + 100;
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    if (id === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <nav
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm py-0'
+          : 'bg-white/80 backdrop-blur-md border-b border-slate-200/60 py-1'
+      }`}
+    >
+      <div className="max-w-[1200px] mx-auto px-6 flex justify-between items-center h-[72px] relative">
+        {/* Brand Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <span className="w-8 h-8 bg-brand-orange flex items-center justify-center rounded-lg shadow-md shadow-brand-orange/20 group-hover:scale-105 transition-transform duration-300">
+            <span className="material-symbols-outlined text-white text-xl">school</span>
+          </span>
+          <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-brand-orange transition-colors">
+            Examify
+          </span>
+        </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <button
+            onClick={() => scrollToSection('hero')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'hero' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Overview
+            {activeSection === 'hero' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => scrollToSection('how-it-works')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'how-it-works' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            How It Works
+            {activeSection === 'how-it-works' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => scrollToSection('why-examify')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'why-examify' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Why Examify
+            {activeSection === 'why-examify' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+
+          <button
+            onClick={() => scrollToSection('about')}
+            className={`transition-colors duration-200 relative py-1 ${
+              activeSection === 'about' ? 'text-brand-orange font-semibold' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            About Us
+            {activeSection === 'about' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-orange rounded-full" />
+            )}
+          </button>
+        </div>
+
+        {/* Right CTA Actions: Get Started */}
+        <div className="hidden md:flex items-center gap-4">
+          <button
+            onClick={onGetStarted || (() => scrollToSection('about'))}
+            aria-label="Get Started"
+            className="bg-brand-orange text-white px-6 py-2.5 rounded-lg font-semibold text-sm btn-primary-glow flex items-center gap-1.5"
+          >
+            <span>Get Started</span>
+            <span className="material-symbols-outlined text-base transition-transform group-hover:translate-x-0.5">
+              arrow_forward
+            </span>
+          </button>
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 text-slate-700 hover:text-brand-orange transition-colors"
+          aria-label="Toggle menu"
+        >
+          <span className="material-symbols-outlined">
+            {mobileMenuOpen ? 'close' : 'menu'}
+          </span>
+        </button>
+      </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-b border-slate-200 bg-white px-6 py-4 space-y-3 shadow-lg animate-fade-in">
+          <button
+            onClick={() => scrollToSection('hero')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => scrollToSection('how-it-works')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            How It Works
+          </button>
+          <button
+            onClick={() => scrollToSection('why-examify')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            Why Examify
+          </button>
+          <button
+            onClick={() => scrollToSection('about')}
+            className="block w-full text-left py-2 text-sm font-medium text-slate-700 hover:text-brand-orange"
+          >
+            About Us
+          </button>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              if (onGetStarted) onGetStarted();
+              else scrollToSection('about');
+            }}
+            className="w-full bg-brand-orange text-white py-3 rounded-lg font-semibold text-sm text-center btn-primary-glow flex items-center justify-center gap-1.5 mt-2"
+          >
+            <span>Get Started</span>
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+};
