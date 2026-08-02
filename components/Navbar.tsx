@@ -8,7 +8,7 @@ interface NavbarProps {
   onGetStarted?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onGetStarted }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onGetStarted, onOpenLogin }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
