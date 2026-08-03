@@ -29,6 +29,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [semester, setSemesterInput] = useState<number>(4);
+  const [section, setSection] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -123,6 +124,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         email: email || `${usn.toLowerCase()}@college.edu`,
         department: 'BCA',
         semester,
+        section: section.toUpperCase(),
       },
       password
     );
@@ -152,7 +154,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const handleGoogleSemesterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (tempGoogleUsn) {
-      await completeGoogleSignIn(tempGoogleUsn, semester);
+      await completeGoogleSignIn(tempGoogleUsn, semester, section.toUpperCase());
       triggerSuccessfulRedirect(semester);
     }
   };
@@ -340,21 +342,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                   <p className="text-emerald-700 text-xs font-medium">Please select your BCA Semester to finalize your dashboard setup.</p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Select Your Semester <span className="text-brand-orange">*</span>
-                  </label>
-                  <select
-                    value={semester}
-                    onChange={(e) => setSemesterInput(Number(e.target.value))}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all bg-white font-bold mb-4"
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Semester {sem} (BCA)
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                      Semester <span className="text-brand-orange">*</span>
+                    </label>
+                    <select
+                      value={semester}
+                      onChange={(e) => setSemesterInput(Number(e.target.value))}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all bg-white font-bold mb-4"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((sem) => (
+                        <option key={sem} value={sem}>
+                          Semester {sem} (BCA)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                      Section <span className="text-slate-400">(Opt)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. A"
+                      maxLength={1}
+                      value={section}
+                      onChange={(e) => setSection(e.target.value.toUpperCase())}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all uppercase mb-4"
+                    />
+                  </div>
                 </div>
 
                 <button
@@ -469,21 +486,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Semester <span className="text-brand-orange">*</span>
-                  </label>
-                  <select
-                    value={semester}
-                    onChange={(e) => setSemesterInput(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-brand-orange font-bold"
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Semester {sem} (BCA)
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                      Semester <span className="text-brand-orange">*</span>
+                    </label>
+                    <select
+                      value={semester}
+                      onChange={(e) => setSemesterInput(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-brand-orange font-bold"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((sem) => (
+                        <option key={sem} value={sem}>
+                          Sem {sem}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                      Section
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. A"
+                      maxLength={1}
+                      value={section}
+                      onChange={(e) => setSection(e.target.value.toUpperCase())}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange uppercase"
+                    />
+                  </div>
                 </div>
 
                 <div>

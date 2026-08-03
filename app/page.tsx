@@ -127,6 +127,9 @@ function MainApp() {
               Welcome to Examify, <br className="md:hidden" />
               <span className="text-white/80">{user?.name?.split(' ')[0] || 'Student'}</span>.
             </h1>
+            <p className="text-slate-400 text-center mt-4 text-sm md:text-base font-medium">
+              Semester {user?.semester || 4} {user?.section ? `| Section ${user.section}` : ''} | {user?.usn}
+            </p>
           </div>
         </div>
       )}

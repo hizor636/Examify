@@ -29,6 +29,7 @@ export interface UserProfile {
   email: string;
   department: string; // Default: 'BCA'
   semester: number; // 1 to 6
+  section?: string; // e.g., 'A', 'B'
   role: 'student' | 'admin';
   passwordSet: boolean;
   createdAt: string;
@@ -47,7 +48,7 @@ interface AuthContextType {
   markItemCompleted: (type: keyof UserCompletedItems, itemId: string) => void;
   calculateReadinessScore: () => { overall: number; label: string; breakdown: Record<string, number> };
   loginWithGoogle: () => Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }>;
-  completeGoogleSignIn: (mockUsn: string, semester: number) => void;
+  completeGoogleSignIn: (mockUsn: string, semester: number, section: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -270,13 +271,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const completeGoogleSignIn = async (mockUsn: string, semester: number) => {
+  const completeGoogleSignIn = async (mockUsn: string, semester: number, section: string) => {
     if (!pendingUser || !pendingUser.uid) return;
     try {
        setLoading(true);
        const fullProfile: UserProfile = {
          ...pendingUser,
          semester,
+         section,
        } as UserProfile;
 
        await setDoc(doc(db, 'users', pendingUser.uid), fullProfile);
