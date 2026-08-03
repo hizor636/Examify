@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../components/Navbar';
-import { DashboardSidebar } from '../components/DashboardSidebar';
-import { DashboardHeader } from '../components/DashboardHeader';
 import { HeroSection } from '../components/HeroSection';
 import { TrustStrip } from '../components/TrustStrip';
 import { HowItWorks } from '../components/HowItWorks';
