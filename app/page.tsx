@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../components/Navbar';
@@ -15,26 +15,49 @@ import { AuthModal } from '../components/AuthModal';
 function MainApp() {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showCinematic, setShowCinematic] = useState(false);
+  const [cinematicOut, setCinematicOut] = useState(false);
+  const isAuthAction = useRef(false);
 
   const router = useRouter();
 
   // Auto-redirect logged-in students to dashboard
-  React.useEffect(() => {
-    if (!loading && user) {
+  useEffect(() => {
+    if (!loading && user && !isAuthAction.current && !showCinematic) {
       router.replace('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, showCinematic]);
 
   const handleOpenAuth = () => {
+    isAuthAction.current = true;
     setAuthModalOpen(true);
   };
 
   const handleAuthSuccess = (sem: number) => {
-    router.replace('/dashboard');
+    setAuthModalOpen(false);
+    setShowCinematic(true);
+
+    // Fade out after 2.5s
+    setTimeout(() => {
+      setCinematicOut(true);
+    }, 2500);
+
+    // Redirect after 3.5s
+    setTimeout(() => {
+      router.replace('/dashboard');
+    }, 3500);
+  };
+
+  const handleAuthClose = () => {
+    setAuthModalOpen(false);
+    if (!user) {
+      isAuthAction.current = false;
+    }
   };
 
   const handleSelectSemester = () => {
     if (!user) {
+      isAuthAction.current = true;
       setAuthModalOpen(true);
     } else {
       router.replace('/dashboard');
@@ -83,9 +106,21 @@ function MainApp() {
       {/* Auth & USN+DOB Verification Modal */}
       <AuthModal
         isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
+        onClose={handleAuthClose}
         onSuccessRedirect={handleAuthSuccess}
       />
+
+      {/* Cinematic Welcome Overlay */}
+      {showCinematic && (
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center pointer-events-none">
+          <div className={cinematicOut ? 'animate-cinematic-out' : 'animate-cinematic-in'}>
+            <h1 className="text-white text-3xl md:text-5xl font-bold tracking-tight text-center">
+              Welcome to Examify, <br className="md:hidden" />
+              <span className="text-white/80">{user?.name?.split(' ')[0] || 'Student'}</span>.
+            </h1>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

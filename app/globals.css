@@ -115,3 +115,21 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes cinematicTextIn {
+  0% { opacity: 0; transform: scale(0.95); filter: blur(4px); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@keyframes cinematicTextOut {
+  0% { opacity: 1; transform: scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: scale(1.05); filter: blur(8px); }
+}
+
+.animate-cinematic-in {
+  animation: cinematicTextIn 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-cinematic-out {
+  animation: cinematicTextOut 1s cubic-bezier(0.8, 0.2, 0.8, 1) forwards;
+}
