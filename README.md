@@ -4,8 +4,6 @@
 
 A BCA (Bachelor of Computer Applications) academic resource platform covering all 6 semesters — notes, question papers, AI-powered doubt solving, and a "night-before-exam" prep system.
 
-🌐 **Live Site:** [night-saviour.vercel.app](https://night-saviour.vercel.app)
-
 ---
 
 ## 📋 Table of Contents
@@ -32,7 +30,6 @@ A BCA (Bachelor of Computer Applications) academic resource platform covering al
 | **React 18** | UI component library |
 | **TypeScript** | Type-safe JavaScript |
 | **Tailwind CSS** | Utility-first CSS styling |
-| **Vercel** | Hosting & deployment |
 | **Git + GitHub** | Version control & collaboration |
 
 ---
