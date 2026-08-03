@@ -15,18 +15,16 @@ import { AuthModal } from '../components/AuthModal';
 function MainApp() {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [showCinematic, setShowCinematic] = useState(false);
-  const [cinematicOut, setCinematicOut] = useState(false);
   const isAuthAction = useRef(false);
 
   const router = useRouter();
 
   // Auto-redirect logged-in students to dashboard
   useEffect(() => {
-    if (!loading && user && !isAuthAction.current && !showCinematic) {
+    if (!loading && user && !isAuthAction.current) {
       router.replace('/dashboard');
     }
-  }, [user, loading, router, showCinematic]);
+  }, [user, loading, router]);
 
   const handleOpenAuth = () => {
     isAuthAction.current = true;
@@ -35,17 +33,7 @@ function MainApp() {
 
   const handleAuthSuccess = (sem: number) => {
     setAuthModalOpen(false);
-    setShowCinematic(true);
-
-    // Fade out after 2.5s
-    setTimeout(() => {
-      setCinematicOut(true);
-    }, 2500);
-
-    // Redirect after 3.5s
-    setTimeout(() => {
-      router.replace('/dashboard');
-    }, 3500);
+    router.replace('/dashboard');
   };
 
   const handleAuthClose = () => {
@@ -109,18 +97,6 @@ function MainApp() {
         onClose={handleAuthClose}
         onSuccessRedirect={handleAuthSuccess}
       />
-
-      {/* Cinematic Welcome Overlay */}
-      {showCinematic && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center pointer-events-none">
-          <div className={cinematicOut ? 'animate-cinematic-out' : 'animate-cinematic-in'}>
-            <h1 className="text-white text-3xl md:text-5xl font-bold tracking-tight text-center">
-              Welcome to Examify, <br className="md:hidden" />
-              <span className="text-white/80">{user?.name?.split(' ')[0] || 'Student'}</span>.
-            </h1>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
