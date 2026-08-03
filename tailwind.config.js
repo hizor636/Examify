@@ -115,10 +115,7 @@ module.exports = {
         marquee: 'marquee 65s linear infinite',
         'marquee-reverse': 'marquee-reverse 65s linear infinite',
       },
-      boxShadow: {
-        vercel: '0 0 0 1px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04)',
-        'vercel-hover': '0 0 0 1px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.08)',
-      },
+
     },
   },
   plugins: [],
