@@ -226,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async (): Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }> => {
     try {
+      setLoading(true);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
@@ -234,6 +235,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
+         const profile = userDoc.data() as UserProfile;
+         if (!profile.completedItems) {
+            profile.completedItems = { notes: [], quizzes: [], pyqs: [], labs: [], important: [] };
+         }
+         setUser(profile);
+         setLoading(false);
          return { success: true, requiresSemester: false };
       }
 
@@ -254,9 +261,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setPendingUser(newProfile);
+      setLoading(false);
       return { success: true, requiresSemester: true, mockUsn };
     } catch (error) {
       console.error('Google Sign In Error', error);
+      setLoading(false);
       return { success: false };
     }
   };
@@ -264,15 +273,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeGoogleSignIn = async (mockUsn: string, semester: number) => {
     if (!pendingUser || !pendingUser.uid) return;
     try {
+       setLoading(true);
        const fullProfile: UserProfile = {
          ...pendingUser,
          semester,
        } as UserProfile;
 
        await setDoc(doc(db, 'users', pendingUser.uid), fullProfile);
+       setUser(fullProfile);
        setPendingUser(null);
+       setLoading(false);
     } catch (error) {
        console.error("Error completing Google Sign In:", error);
+       setLoading(false);
     }
   };
 
