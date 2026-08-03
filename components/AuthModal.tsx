@@ -10,13 +10,14 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccessRedirect }) => {
-  const { verifyUsnDob, setPassword, loginWithPassword, registerStudent, setSemester } = useAuth();
+  const { verifyUsnDob, setPassword, loginWithPassword, registerStudent, setSemester, loginWithGoogle, completeGoogleSignIn } = useAuth();
 
-  // Auth Modes: 'verify' (USN+DOB step 1), 'setPassword' (step 2), 'login' (Password login), 'register' (Full setup)
-  const [mode, setMode] = useState<'verify' | 'setPassword' | 'login' | 'register'>('verify');
+  // Auth Modes: 'verify', 'setPassword', 'login', 'register', 'setGoogleSemester'
+  const [mode, setMode] = useState<'verify' | 'setPassword' | 'login' | 'register' | 'setGoogleSemester'>('verify');
   const [stepIndex, setStepIndex] = useState<number>(1);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [tempGoogleUsn, setTempGoogleUsn] = useState('');
 
   // Form Fields
   const [usn, setUsn] = useState('');
@@ -133,6 +134,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    const res = await loginWithGoogle();
+    if (res.success) {
+      if (res.requiresSemester && res.mockUsn) {
+        setTempGoogleUsn(res.mockUsn);
+        setMode('setGoogleSemester');
+      } else {
+        triggerSuccessfulRedirect(semester); // Or use user.semester if we had it synchronously, but usually it reloads or pushes to dashboard
+      }
+    } else {
+      setError('Google Sign-In failed or was cancelled.');
+    }
+  };
+
+  const handleGoogleSemesterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tempGoogleUsn) {
+      completeGoogleSignIn(tempGoogleUsn, semester);
+      triggerSuccessfulRedirect(semester);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full relative overflow-hidden flex flex-col md:flex-row min-h-[520px]">
@@ -148,7 +172,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         <div className="flex-1 p-6 sm:p-10 flex flex-col justify-between relative">
           <div>
             {/* Multi-step progress bar */}
-            {mode !== 'login' && mode !== 'register' && (
+            {mode !== 'login' && mode !== 'register' && mode !== 'setGoogleSemester' && (
               <div className="mb-6">
                 <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                   <span className={stepIndex >= 1 ? 'text-brand-orange' : ''}>1. USN &amp; DOB</span>
@@ -171,6 +195,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 {mode === 'setPassword' && 'Secure Your Student Account'}
                 {mode === 'login' && 'Log In to Student Dashboard'}
                 {mode === 'register' && 'Create Verified Student Account'}
+                {mode === 'setGoogleSemester' && 'Complete Your Profile'}
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-1">
                 Enter your enrollment details to unlock 6 semesters of verified notes &amp; AI study tools.
@@ -289,6 +314,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               </form>
             )}
 
+            {/* FORM 2.5: GOOGLE SEMESTER SETUP */}
+            {mode === 'setGoogleSemester' && (
+              <form onSubmit={handleGoogleSemesterSubmit} className="space-y-4">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl mb-4">
+                  <h4 className="text-emerald-800 font-bold text-sm mb-1 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base">check_circle</span>
+                    Google Sign-In Successful!
+                  </h4>
+                  <p className="text-emerald-700 text-xs font-medium">Please select your BCA Semester to finalize your dashboard setup.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                    Select Your Semester <span className="text-brand-orange">*</span>
+                  </label>
+                  <select
+                    value={semester}
+                    onChange={(e) => setSemesterInput(Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all bg-white font-bold mb-4"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Semester {sem} (BCA)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-brand-orange text-white py-3.5 rounded-2xl font-bold text-sm shadow-md hover:bg-brand-orange/90 transition-colors flex items-center justify-center gap-2 mt-2"
+                >
+                  <span>Complete Setup & Launch Dashboard</span>
+                  <span className="material-symbols-outlined text-lg">rocket_launch</span>
+                </button>
+              </form>
+            )}
+
             {/* FORM 3: LOGIN WITH PASSWORD */}
             {mode === 'login' && (
               <form onSubmit={handleLogin} className="space-y-4">
@@ -326,6 +389,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 >
                   <span>Log In to Dashboard</span>
                   <span className="material-symbols-outlined text-lg">login</span>
+                </button>
+
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-white text-slate-700 border border-slate-300 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors"
+                >
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                  <span>Continue with Google</span>
                 </button>
               </form>
             )}
@@ -414,13 +492,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                   <span>Register &amp; Access Dashboard</span>
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
                 </button>
+
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-white text-slate-700 border border-slate-300 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors"
+                >
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                  <span>Continue with Google</span>
+                </button>
               </form>
             )}
           </div>
 
           {/* Mode Switcher Options */}
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600 font-semibold">
-            {mode !== 'verify' && (
+          <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap gap-4 items-center justify-between text-xs text-slate-600 font-semibold">
+            {mode !== 'verify' && mode !== 'setGoogleSemester' && (
               <button onClick={() => setMode('verify')} className="text-brand-orange hover:underline flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">shield</span>
                 <span>USN Verification</span>
@@ -433,7 +526,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               </button>
             )}
 
-            {mode !== 'register' && (
+            {mode !== 'register' && mode !== 'setGoogleSemester' && (
               <button onClick={() => setMode('register')} className="text-slate-700 hover:underline">
                 Full Register
               </button>

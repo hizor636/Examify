@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '../firebase/config';
 
 export interface UserCompletedItems {
   notes: string[];
@@ -35,6 +37,8 @@ interface AuthContextType {
   setSemester: (sem: number) => void;
   markItemCompleted: (type: keyof UserCompletedItems, itemId: string) => void;
   calculateReadinessScore: () => { overall: number; label: string; breakdown: Record<string, number> };
+  loginWithGoogle: () => Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }>;
+  completeGoogleSignIn: (mockUsn: string, semester: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -48,6 +52,8 @@ const AuthContext = createContext<AuthContextType>({
   setSemester: () => {},
   markItemCompleted: () => {},
   calculateReadinessScore: () => ({ overall: 0, label: 'Getting Started', breakdown: {} }),
+  loginWithGoogle: async () => ({ success: false }),
+  completeGoogleSignIn: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -178,6 +184,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
+  const loginWithGoogle = async (): Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }> => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const gUser = result.user;
+
+      const mockUsn = `GOOGLE_${gUser.uid.substring(0, 8)}`.toUpperCase();
+      
+      const dbStored = localStorage.getItem(`examify_db_${mockUsn}`);
+      if (dbStored) {
+        const existing = JSON.parse(dbStored);
+        saveUserSession(existing);
+        return { success: true, requiresSemester: false };
+      }
+
+      // First time Google User
+      const newProfile: UserProfile = {
+        uid: gUser.uid,
+        usn: mockUsn,
+        dob: '2000-01-01',
+        name: gUser.displayName || 'Google Student',
+        email: gUser.email || '',
+        department: 'BCA',
+        semester: 4, // Temp, will be set in completeGoogleSignIn
+        role: 'student',
+        passwordSet: true, // N/A for Google Auth
+        createdAt: new Date().toISOString(),
+        completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
+      };
+
+      // Don't save session globally yet, wait for semester
+      localStorage.setItem(`examify_temp_google_${mockUsn}`, JSON.stringify(newProfile));
+      
+      return { success: true, requiresSemester: true, mockUsn };
+    } catch (error) {
+      console.error('Google Sign In Error', error);
+      return { success: false };
+    }
+  };
+
+  const completeGoogleSignIn = (mockUsn: string, semester: number) => {
+    const tempStored = localStorage.getItem(`examify_temp_google_${mockUsn}`);
+    if (tempStored) {
+      const profile: UserProfile = JSON.parse(tempStored);
+      profile.semester = semester;
+      saveUserSession(profile);
+      localStorage.setItem(`examify_db_${profile.usn}`, JSON.stringify(profile));
+      localStorage.removeItem(`examify_temp_google_${mockUsn}`);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('examify_user');
@@ -259,6 +316,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSemester,
         markItemCompleted,
         calculateReadinessScore,
+        loginWithGoogle,
+        completeGoogleSignIn,
       }}
     >
       {children}
