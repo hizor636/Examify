@@ -62,8 +62,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         setStepIndex(2);
         setMode('setPassword');
       } else {
-        // Auto-redirect directly to dashboard!
-        triggerSuccessfulRedirect(res.userProfile?.semester || 4);
+        setSuccessMsg('You already have an account! Please log in with your password.');
+        setMode('login');
       }
     } else {
       setError('Verification failed. Please double check USN and Date of Birth.');
@@ -252,6 +252,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 >
                   <span>Verify Enrollment &amp; Enter Dashboard</span>
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </button>
+
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-white text-slate-700 border border-slate-300 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors"
+                >
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                  <span>Continue with Google</span>
                 </button>
               </form>
             )}

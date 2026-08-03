@@ -1,8 +1,17 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, query, collection, where, getDocs } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
 
 export interface UserCompletedItems {
   notes: string[];
@@ -60,128 +69,159 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Temporary state to hold user data during verification -> setPassword flow
+  const [pendingUser, setPendingUser] = useState<Partial<UserProfile> | null>(null);
+
   useEffect(() => {
-    // Load persisted user session from localStorage if present
-    const stored = localStorage.getItem('examify_user');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (!parsed.completedItems) {
-          parsed.completedItems = { notes: [], quizzes: [], pyqs: [], labs: [], important: [] };
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const profile = userDoc.data() as UserProfile;
+            // Ensure completedItems structure exists in case it was created without it
+            if (!profile.completedItems) {
+               profile.completedItems = { notes: [], quizzes: [], pyqs: [], labs: [], important: [] };
+            }
+            setUser(profile);
+          } else {
+            console.warn('Firebase user exists but no Firestore profile found.');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          setUser(null);
         }
-        setUser(parsed);
-      } catch (e) {
-        console.error('Failed to parse user session', e);
+      } else {
+        setUser(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const saveUserSession = (updatedUser: UserProfile) => {
-    setUser(updatedUser);
-    localStorage.setItem('examify_user', JSON.stringify(updatedUser));
-  };
-
-  // USN + DOB verification flow
   const verifyUsnDob = async (usnInput: string, dobInput: string) => {
     setLoading(true);
     const cleanedUsn = usnInput.trim().toUpperCase();
 
-    // Check if user already registered in localStorage database
-    const dbStored = localStorage.getItem(`examify_db_${cleanedUsn}`);
-    if (dbStored) {
-      try {
-        const existing: UserProfile = JSON.parse(dbStored);
-        if (existing.dob === dobInput) {
-          saveUserSession(existing);
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('usn', '==', cleanedUsn));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // User exists
+        const existingDoc = querySnapshot.docs[0];
+        const existingUser = existingDoc.data() as UserProfile;
+        
+        if (existingUser.dob === dobInput) {
           setLoading(false);
-          return { success: true, isFirstTime: !existing.passwordSet, userProfile: existing };
+          return { success: true, isFirstTime: !existingUser.passwordSet, userProfile: existingUser };
+        } else {
+          setLoading(false);
+          return { success: false, isFirstTime: false }; // DOB mismatch
         }
-      } catch (e) {
-        console.error(e);
       }
+
+      // First time verification seed (user doesn't exist yet)
+      const newProfile: Partial<UserProfile> = {
+        usn: cleanedUsn,
+        dob: dobInput,
+        name: `BCA Student (${cleanedUsn.slice(-4)})`,
+        email: `${cleanedUsn.toLowerCase()}@college.edu`,
+        department: 'BCA',
+        semester: 4, // default sem
+        role: 'student',
+        passwordSet: false,
+        createdAt: new Date().toISOString(),
+        completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
+      };
+
+      setPendingUser(newProfile);
+      setLoading(false);
+      return { success: true, isFirstTime: true };
+
+    } catch (error) {
+      console.error("Error verifying USN:", error);
+      setLoading(false);
+      return { success: false, isFirstTime: true };
     }
-
-    // First time verification seed
-    const newProfile: UserProfile = {
-      uid: 'usr_' + Date.now(),
-      usn: cleanedUsn,
-      dob: dobInput,
-      name: `BCA Student (${cleanedUsn.slice(-4)})`,
-      email: `${cleanedUsn.toLowerCase()}@college.edu`,
-      department: 'BCA',
-      semester: 4, // default sem
-      role: 'student',
-      passwordSet: false,
-      createdAt: new Date().toISOString(),
-      completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
-    };
-
-    saveUserSession(newProfile);
-    localStorage.setItem(`examify_db_${cleanedUsn}`, JSON.stringify(newProfile));
-    setLoading(false);
-    return { success: true, isFirstTime: true, userProfile: newProfile };
   };
 
   const setPassword = async (password: string): Promise<boolean> => {
-    if (!user) return false;
-    const updated: UserProfile = {
-      ...user,
-      passwordSet: true,
-    };
-    saveUserSession(updated);
-    localStorage.setItem(`examify_db_${user.usn}`, JSON.stringify(updated));
-    return true;
+    if (!pendingUser || !pendingUser.email) return false;
+    
+    try {
+      setLoading(true);
+      // Create auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, pendingUser.email, password);
+      
+      // Save profile to Firestore
+      const fullProfile: UserProfile = {
+        ...pendingUser,
+        uid: userCredential.user.uid,
+        passwordSet: true,
+      } as UserProfile;
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), fullProfile);
+      
+      // The onAuthStateChanged listener will pick up the new user and set state
+      setPendingUser(null);
+      setLoading(false);
+      return true;
+    } catch (error) {
+      console.error("Error setting password:", error);
+      setLoading(false);
+      return false;
+    }
   };
 
   const loginWithPassword = async (identifier: string, pass: string): Promise<boolean> => {
-    setLoading(true);
-    const cleanId = identifier.trim().toUpperCase();
-
-    const dbStored = localStorage.getItem(`examify_db_${cleanId}`);
-    if (dbStored) {
-      const existing: UserProfile = JSON.parse(dbStored);
-      saveUserSession(existing);
-      setLoading(false);
+    try {
+      setLoading(true);
+      const cleanId = identifier.trim().toLowerCase();
+      // If identifier is not an email, assume it's a USN
+      const email = cleanId.includes('@') ? cleanId : `${cleanId}@college.edu`;
+      
+      await signInWithEmailAndPassword(auth, email, pass);
+      // Let the auth state listener handle fetching and setting user
       return true;
+    } catch (error) {
+      console.error("Error logging in:", error);
+      setLoading(false);
+      return false;
     }
-
-    // Fallback login
-    const mockUser: UserProfile = {
-      uid: 'user_' + Date.now(),
-      usn: cleanId.includes('1') ? cleanId : '1NC22CS123',
-      dob: '2004-05-15',
-      name: identifier.split('@')[0].toUpperCase(),
-      email: identifier.includes('@') ? identifier : `${cleanId.toLowerCase()}@college.edu`,
-      department: 'BCA',
-      semester: 4,
-      role: identifier.toLowerCase().includes('admin') ? 'admin' : 'student',
-      passwordSet: true,
-      createdAt: new Date().toISOString(),
-      completedItems: { notes: ['n101_1'], quizzes: ['q101_1'], pyqs: ['pyq101_1'], labs: ['lab101_1'], important: ['iq101_1'] },
-    };
-    saveUserSession(mockUser);
-    setLoading(false);
-    return true;
   };
 
   const registerStudent = async (
     data: Omit<UserProfile, 'uid' | 'role' | 'createdAt' | 'completedItems' | 'passwordSet'>,
     pass: string
   ): Promise<boolean> => {
-    setLoading(true);
-    const newUser: UserProfile = {
-      ...data,
-      uid: 'user_' + Date.now(),
-      role: 'student',
-      passwordSet: true,
-      createdAt: new Date().toISOString(),
-      completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
-    };
-    saveUserSession(newUser);
-    localStorage.setItem(`examify_db_${newUser.usn}`, JSON.stringify(newUser));
-    setLoading(false);
-    return true;
+    try {
+      setLoading(true);
+      const email = data.email || `${data.usn.toLowerCase()}@college.edu`;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      
+      const newUser: UserProfile = {
+        ...data,
+        uid: userCredential.user.uid,
+        email,
+        role: 'student',
+        passwordSet: true,
+        createdAt: new Date().toISOString(),
+        completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
+      };
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+      setLoading(false);
+      return true;
+    } catch (error) {
+      console.error("Error registering student:", error);
+      setLoading(false);
+      return false;
+    }
   };
 
   const loginWithGoogle = async (): Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }> => {
@@ -190,33 +230,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signInWithPopup(auth, provider);
       const gUser = result.user;
 
-      const mockUsn = `GOOGLE_${gUser.uid.substring(0, 8)}`.toUpperCase();
-      
-      const dbStored = localStorage.getItem(`examify_db_${mockUsn}`);
-      if (dbStored) {
-        const existing = JSON.parse(dbStored);
-        saveUserSession(existing);
-        return { success: true, requiresSemester: false };
+      const userDocRef = doc(db, 'users', gUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+         return { success: true, requiresSemester: false };
       }
 
       // First time Google User
-      const newProfile: UserProfile = {
+      const mockUsn = `GOOGLE_${gUser.uid.substring(0, 8)}`.toUpperCase();
+      
+      const newProfile: Partial<UserProfile> = {
         uid: gUser.uid,
         usn: mockUsn,
         dob: '2000-01-01',
         name: gUser.displayName || 'Google Student',
         email: gUser.email || '',
         department: 'BCA',
-        semester: 4, // Temp, will be set in completeGoogleSignIn
         role: 'student',
         passwordSet: true, // N/A for Google Auth
         createdAt: new Date().toISOString(),
         completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
       };
 
-      // Don't save session globally yet, wait for semester
-      localStorage.setItem(`examify_temp_google_${mockUsn}`, JSON.stringify(newProfile));
-      
+      setPendingUser(newProfile);
       return { success: true, requiresSemester: true, mockUsn };
     } catch (error) {
       console.error('Google Sign In Error', error);
@@ -224,49 +261,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const completeGoogleSignIn = (mockUsn: string, semester: number) => {
-    const tempStored = localStorage.getItem(`examify_temp_google_${mockUsn}`);
-    if (tempStored) {
-      const profile: UserProfile = JSON.parse(tempStored);
-      profile.semester = semester;
-      saveUserSession(profile);
-      localStorage.setItem(`examify_db_${profile.usn}`, JSON.stringify(profile));
-      localStorage.removeItem(`examify_temp_google_${mockUsn}`);
+  const completeGoogleSignIn = async (mockUsn: string, semester: number) => {
+    if (!pendingUser || !pendingUser.uid) return;
+    try {
+       const fullProfile: UserProfile = {
+         ...pendingUser,
+         semester,
+       } as UserProfile;
+
+       await setDoc(doc(db, 'users', pendingUser.uid), fullProfile);
+       setPendingUser(null);
+    } catch (error) {
+       console.error("Error completing Google Sign In:", error);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('examify_user');
-  };
-
-  const setSemester = (sem: number) => {
-    if (user) {
-      const updated = { ...user, semester: sem };
-      saveUserSession(updated);
-      if (user.usn) {
-        localStorage.setItem(`examify_db_${user.usn}`, JSON.stringify(updated));
-      }
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   };
 
-  const markItemCompleted = (type: keyof UserCompletedItems, itemId: string) => {
+  const setSemester = async (sem: number) => {
+    if (!user) return;
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { semester: sem });
+      setUser({ ...user, semester: sem });
+    } catch (error) {
+       console.error("Error updating semester:", error);
+    }
+  };
+
+  const markItemCompleted = async (type: keyof UserCompletedItems, itemId: string) => {
     if (!user) return;
     const currentList = user.completedItems?.[type] || [];
     if (currentList.includes(itemId)) return; // already marked
 
-    const updatedItems: UserCompletedItems = {
-      ...user.completedItems,
-      [type]: [...currentList, itemId],
-    };
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        [`completedItems.${type}`]: arrayUnion(itemId)
+      });
 
-    const updatedUser: UserProfile = {
-      ...user,
-      completedItems: updatedItems,
-    };
+      const updatedItems: UserCompletedItems = {
+        ...user.completedItems,
+        [type]: [...currentList, itemId],
+      };
 
-    saveUserSession(updatedUser);
-    localStorage.setItem(`examify_db_${user.usn}`, JSON.stringify(updatedUser));
+      setUser({
+        ...user,
+        completedItems: updatedItems,
+      });
+    } catch (error) {
+       console.error("Error marking item completed:", error);
+    }
   };
 
   const calculateReadinessScore = () => {
