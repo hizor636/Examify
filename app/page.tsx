@@ -15,16 +15,25 @@ import { AuthModal } from '../components/AuthModal';
 function MainApp() {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showCinematic, setShowCinematic] = useState(false);
+  const [cinematicOut, setCinematicOut] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const isAuthAction = useRef(false);
 
   const router = useRouter();
 
+  useEffect(() => {
+    if (!loading) {
+      setInitialLoad(false);
+    }
+  }, [loading]);
+
   // Auto-redirect logged-in students to dashboard
   useEffect(() => {
-    if (!loading && user && !isAuthAction.current) {
+    if (!loading && user && !isAuthAction.current && !showCinematic) {
       router.replace('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, showCinematic]);
 
   const handleOpenAuth = () => {
     isAuthAction.current = true;
@@ -33,7 +42,15 @@ function MainApp() {
 
   const handleAuthSuccess = (sem: number) => {
     setAuthModalOpen(false);
-    router.replace('/dashboard');
+    setShowCinematic(true);
+
+    setTimeout(() => {
+      setCinematicOut(true);
+    }, 2500);
+
+    setTimeout(() => {
+      router.replace('/dashboard');
+    }, 3500);
   };
 
   const handleAuthClose = () => {
@@ -52,8 +69,12 @@ function MainApp() {
     }
   };
 
-  if (loading) {
-    return null;
+  if (initialLoad) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-brand-orange rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
 
@@ -97,6 +118,18 @@ function MainApp() {
         onClose={handleAuthClose}
         onSuccessRedirect={handleAuthSuccess}
       />
+
+      {/* Cinematic Welcome Overlay */}
+      {showCinematic && (
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center pointer-events-none">
+          <div className={cinematicOut ? 'animate-cinematic-out' : 'animate-cinematic-in'}>
+            <h1 className="text-white text-3xl md:text-5xl font-bold tracking-tight text-center">
+              Welcome to Examify, <br className="md:hidden" />
+              <span className="text-white/80">{user?.name?.split(' ')[0] || 'Student'}</span>.
+            </h1>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

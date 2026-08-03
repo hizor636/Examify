@@ -149,10 +149,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     }
   };
 
-  const handleGoogleSemesterSubmit = (e: React.FormEvent) => {
+  const handleGoogleSemesterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (tempGoogleUsn) {
-      completeGoogleSignIn(tempGoogleUsn, semester);
+      await completeGoogleSignIn(tempGoogleUsn, semester);
       triggerSuccessfulRedirect(semester);
     }
   };
