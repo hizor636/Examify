@@ -11,29 +11,22 @@ import { AboutSection } from '../components/AboutSection';
 import { FinalCTA } from '../components/FinalCTA';
 import { Footer } from '../components/Footer';
 import { AuthModal } from '../components/AuthModal';
-import { OnboardingCinematic } from '../components/OnboardingCinematic';
 
 function MainApp() {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [showCinematic, setShowCinematic] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
   const isAuthAction = useRef(false);
 
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading) {
-      setInitialLoad(false);
-    }
-  }, [loading]);
+
 
   // Auto-redirect logged-in students to dashboard
   useEffect(() => {
-    if (!loading && user && !isAuthAction.current && !showCinematic) {
+    if (!loading && user && !isAuthAction.current) {
       router.replace('/dashboard');
     }
-  }, [user, loading, router, showCinematic]);
+  }, [user, loading, router]);
 
   const handleOpenAuth = () => {
     isAuthAction.current = true;
@@ -42,10 +35,6 @@ function MainApp() {
 
   const handleAuthSuccess = (sem: number) => {
     setAuthModalOpen(false);
-    setShowCinematic(true);
-  };
-
-  const handleCinematicComplete = () => {
     router.replace('/dashboard');
   };
 
@@ -109,10 +98,7 @@ function MainApp() {
         onSuccessRedirect={handleAuthSuccess}
       />
 
-      {/* Cinematic Welcome Overlay */}
-      {showCinematic && (
-        <OnboardingCinematic onComplete={handleCinematicComplete} />
-      )}
+
     </main>
   );
 }
