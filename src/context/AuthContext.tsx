@@ -49,6 +49,7 @@ interface AuthContextType {
   calculateReadinessScore: () => { overall: number; label: string; breakdown: Record<string, number> };
   loginWithGoogle: () => Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }>;
   completeGoogleSignIn: (mockUsn: string, semester: number, section: string) => void;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -64,6 +65,7 @@ const AuthContext = createContext<AuthContextType>({
   calculateReadinessScore: () => ({ overall: 0, label: 'Getting Started', breakdown: {} }),
   loginWithGoogle: async () => ({ success: false }),
   completeGoogleSignIn: () => {},
+  updateProfile: async () => false,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -167,6 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } as UserProfile;
 
       await setDoc(doc(db, 'users', userCredential.user.uid), fullProfile);
+      setUser(fullProfile);
       
       // The onAuthStateChanged listener will pick up the new user and set state
       setPendingUser(null);
@@ -216,6 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+      setUser(newUser);
       setLoading(false);
       return true;
     } catch (error) {
@@ -288,6 +292,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
        console.error("Error completing Google Sign In:", error);
        setLoading(false);
+    }
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, updates);
+      setUser({ ...user, ...updates });
+      return true;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return false;
     }
   };
 
@@ -385,6 +402,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         calculateReadinessScore,
         loginWithGoogle,
         completeGoogleSignIn,
+        updateProfile,
       }}
     >
       {children}

@@ -133,3 +133,22 @@
 .animate-cinematic-out {
   animation: cinematicTextOut 1s cubic-bezier(0.8, 0.2, 0.8, 1) forwards;
 }
+
+@keyframes cinematicFormIn {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.animate-cinematic-form-in {
+  animation: cinematicFormIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-cinematic-form-in-delay-1 {
+  animation: cinematicFormIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-cinematic-form-in-delay-2 {
+  animation: cinematicFormIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+  opacity: 0;
+}

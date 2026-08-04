@@ -11,12 +11,12 @@ import { AboutSection } from '../components/AboutSection';
 import { FinalCTA } from '../components/FinalCTA';
 import { Footer } from '../components/Footer';
 import { AuthModal } from '../components/AuthModal';
+import { OnboardingCinematic } from '../components/OnboardingCinematic';
 
 function MainApp() {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [showCinematic, setShowCinematic] = useState(false);
-  const [cinematicOut, setCinematicOut] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const isAuthAction = useRef(false);
 
@@ -43,14 +43,10 @@ function MainApp() {
   const handleAuthSuccess = (sem: number) => {
     setAuthModalOpen(false);
     setShowCinematic(true);
+  };
 
-    setTimeout(() => {
-      setCinematicOut(true);
-    }, 2500);
-
-    setTimeout(() => {
-      router.replace('/dashboard');
-    }, 3500);
+  const handleCinematicComplete = () => {
+    router.replace('/dashboard');
   };
 
   const handleAuthClose = () => {
@@ -121,17 +117,7 @@ function MainApp() {
 
       {/* Cinematic Welcome Overlay */}
       {showCinematic && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center pointer-events-none">
-          <div className={cinematicOut ? 'animate-cinematic-out' : 'animate-cinematic-in'}>
-            <h1 className="text-white text-3xl md:text-5xl font-bold tracking-tight text-center">
-              Welcome to Examify, <br className="md:hidden" />
-              <span className="text-white/80">{user?.name?.split(' ')[0] || 'Student'}</span>.
-            </h1>
-            <p className="text-slate-400 text-center mt-4 text-sm md:text-base font-medium">
-              Semester {user?.semester || 4} {user?.section ? `| Section ${user.section}` : ''} | {user?.usn}
-            </p>
-          </div>
-        </div>
+        <OnboardingCinematic onComplete={handleCinematicComplete} />
       )}
     </main>
   );
