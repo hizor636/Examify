@@ -124,6 +124,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (existingUser.dob === dobInput) {
           setLoading(false);
+          if (!existingUser.passwordSet) {
+            setPendingUser(existingUser);
+          }
           return { success: true, isFirstTime: !existingUser.passwordSet, userProfile: existingUser };
         } else {
           setLoading(false);
