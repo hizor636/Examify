@@ -32,6 +32,9 @@ export const OnboardingCinematic: React.FC<OnboardingCinematicProps> = ({ onComp
   }, [user]);
 
   useEffect(() => {
+    // If we've already moved past the initial sequence, don't restart timers
+    if (step > 0) return;
+
     // Stage 1: Display Cinematic Welcome text for a few seconds.
     const timer1 = setTimeout(() => {
       setCinematicOut(true);
@@ -54,7 +57,7 @@ export const OnboardingCinematic: React.FC<OnboardingCinematicProps> = ({ onComp
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [user, onComplete]);
+  }, [user, onComplete, step]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

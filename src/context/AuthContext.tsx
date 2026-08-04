@@ -71,6 +71,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const isRegistering = useRef(false);
 
   // Temporary state to hold user data during verification -> setPassword flow
   const [pendingUser, setPendingUser] = useState<Partial<UserProfile> | null>(null);
@@ -90,7 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(profile);
           } else {
             console.warn('Firebase user exists but no Firestore profile found.');
-            setUser(null);
+            if (!isRegistering.current) {
+              setUser(null);
+            }
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -158,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       setLoading(true);
+      isRegistering.current = true;
       // Create auth user
       const userCredential = await createUserWithEmailAndPassword(auth, pendingUser.email, password);
       
@@ -174,10 +178,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // The onAuthStateChanged listener will pick up the new user and set state
       setPendingUser(null);
       setLoading(false);
+      isRegistering.current = false;
       return true;
     } catch (error) {
       console.error("Error setting password:", error);
       setLoading(false);
+      isRegistering.current = false;
       return false;
     }
   };
@@ -205,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<boolean> => {
     try {
       setLoading(true);
+      isRegistering.current = true;
       const email = data.email || `${data.usn.toLowerCase()}@college.edu`;
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       
@@ -221,10 +228,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
       setUser(newUser);
       setLoading(false);
+      isRegistering.current = false;
       return true;
     } catch (error) {
       console.error("Error registering student:", error);
       setLoading(false);
+      isRegistering.current = false;
       return false;
     }
   };
