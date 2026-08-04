@@ -95,11 +95,10 @@ export const OnboardingCinematic: React.FC<OnboardingCinematicProps> = ({ onComp
                  </div>
               </div>
               <h1 className="text-white text-3xl md:text-5xl font-bold tracking-tight text-center leading-tight">
-                Welcome to Examify, <br />
-                <span className="text-white/80">{user?.name ? user.name.split(' ')[0] : 'Student'}</span>.
+                Welcome to Examify
               </h1>
               <p className="text-slate-400 text-center mt-6 text-sm md:text-base font-medium">
-                Authentication successful. <br/> Your academic dashboard is getting ready...
+                Your academic dashboard is getting ready
               </p>
            </div>
          )}
@@ -120,7 +119,7 @@ export const OnboardingCinematic: React.FC<OnboardingCinematicProps> = ({ onComp
                 
                 <div className="animate-cinematic-form-in-delay-1">
                   <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">
-                    Full Name <span className="text-brand-orange">*</span>
+                    Enter your name <span className="text-brand-orange">*</span>
                   </label>
                   <input
                     type="text"
@@ -135,7 +134,7 @@ export const OnboardingCinematic: React.FC<OnboardingCinematicProps> = ({ onComp
                 <div className="animate-cinematic-form-in-delay-2 flex gap-4">
                   <div className="flex-1">
                     <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">
-                      Semester <span className="text-brand-orange">*</span>
+                      Choose your semester <span className="text-brand-orange">*</span>
                     </label>
                     <select
                       value={semester}
@@ -151,7 +150,7 @@ export const OnboardingCinematic: React.FC<OnboardingCinematicProps> = ({ onComp
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">
-                      Section <span className="text-brand-orange">*</span>
+                      Select your section <span className="text-brand-orange">*</span>
                     </label>
                     <select
                       value={section}
