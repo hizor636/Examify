@@ -10,7 +10,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccessRedirect }) => {
-  const { verifyUsnDob, setPassword, loginWithPassword, registerStudent, setSemester, loginWithGoogle, completeGoogleSignIn } = useAuth();
+  const { bypassLogin, loginWithPassword, registerStudent, setSemester } = useAuth();
 
   // Auth Modes: 'verify', 'setPassword', 'login', 'register', 'setGoogleSemester'
   const [mode, setMode] = useState<'verify' | 'setPassword' | 'login' | 'register' | 'setGoogleSemester'>('verify');
@@ -66,25 +66,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       return;
     }
 
-    // If login fails (new USN), register instantly
-    const regOk = await registerStudent(
-      {
-        usn: usn.toUpperCase().trim(),
-        dob: '2000-01-01', // Dummy DOB
-        name: name || `Student (${usn.slice(-4)})`,
-        email,
-        department: 'BCA',
-        semester: 4,
-        section: '',
-      },
-      defaultPassword
-    );
+    // If login fails (new USN or password mismatch), bypass instantly
+    const bypassOk = await bypassLogin(name, usn);
 
-    if (regOk) {
+    if (bypassOk) {
       triggerSuccessfulRedirect(4);
     } else {
-      // Fallback if they registered earlier with a different password
-      setError('This USN is locked. Please try a different random USN.');
+      setError('System overload. Please try again in a moment.');
     }
   };
 

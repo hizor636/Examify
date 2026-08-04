@@ -50,6 +50,7 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<{ success: boolean; requiresSemester?: boolean; mockUsn?: string }>;
   completeGoogleSignIn: (mockUsn: string, semester: number, section: string) => void;
   updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
+  bypassLogin: (name: string, usn: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -66,6 +67,7 @@ const AuthContext = createContext<AuthContextType>({
   loginWithGoogle: async () => ({ success: false }),
   completeGoogleSignIn: () => {},
   updateProfile: async () => false,
+  bypassLogin: async () => false,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -235,6 +237,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (error) {
       console.error("Error registering student:", error);
+      setLoading(false);
+      isRegistering.current = false;
+      return false;
+    }
+  };
+
+  const bypassLogin = async (name: string, usn: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      isRegistering.current = true;
+      const randomEmail = `guest_${Date.now()}_${Math.floor(Math.random()*10000)}@examify.com`;
+      const randomPass = 'examify-bypass-123';
+      
+      const userCredential = await createUserWithEmailAndPassword(auth, randomEmail, randomPass);
+      
+      const newProfile: UserProfile = {
+        uid: userCredential.user.uid,
+        usn: usn.toUpperCase() || `GUEST${Math.floor(Math.random()*1000)}`,
+        dob: '2000-01-01',
+        name: name || `Student`,
+        email: randomEmail,
+        department: 'BCA',
+        semester: 4,
+        role: 'student',
+        passwordSet: true,
+        createdAt: new Date().toISOString(),
+        completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
+      };
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), newProfile);
+      setUser(newProfile);
+      setLoading(false);
+      isRegistering.current = false;
+      return true;
+    } catch (error) {
+      console.error("Bypass login failed:", error);
       setLoading(false);
       isRegistering.current = false;
       return false;
@@ -415,6 +453,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         completeGoogleSignIn,
         updateProfile,
+        bypassLogin,
       }}
     >
       {children}
