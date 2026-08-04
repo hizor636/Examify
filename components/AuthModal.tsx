@@ -196,7 +196,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                 {mode === 'verify' && 'One Step Closer to Passing'}
                 {mode === 'setPassword' && 'Secure Your Student Account'}
                 {mode === 'login' && 'Log In to Student Dashboard'}
-                {mode === 'register' && 'Create Verified Student Account'}
                 {mode === 'setGoogleSemester' && 'Complete Your Profile'}
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-1">
@@ -302,23 +301,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Select Your Semester <span className="text-brand-orange">*</span>
-                  </label>
-                  <select
-                    value={semester}
-                    onChange={(e) => setSemesterInput(Number(e.target.value))}
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange focus:ring-2 focus:ring-brand-orange/20 transition-all bg-white font-bold mb-4"
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Semester {sem} (BCA)
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <button
@@ -440,122 +422,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               </form>
             )}
 
-            {/* FORM 4: FULL REGISTRATION */}
-            {mode === 'register' && (
-              <form onSubmit={handleRegister} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Full Name <span className="text-brand-orange">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Rahul Sharma"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                      USN <span className="text-brand-orange">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="1NC22CS123"
-                      value={usn}
-                      onChange={(e) => setUsn(e.target.value.toUpperCase())}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:border-brand-orange"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                      DOB <span className="text-brand-orange">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                      Semester <span className="text-brand-orange">*</span>
-                    </label>
-                    <select
-                      value={semester}
-                      onChange={(e) => setSemesterInput(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-brand-orange font-bold"
-                    >
-                      {[1, 2, 3, 4, 5, 6].map((sem) => (
-                        <option key={sem} value={sem}>
-                          Sem {sem}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                      Section
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. A"
-                      maxLength={1}
-                      value={section}
-                      onChange={(e) => setSection(e.target.value.toUpperCase())}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange uppercase"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Password <span className="text-brand-orange">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-orange"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-brand-orange text-white py-3 rounded-xl font-bold text-sm btn-primary-glow flex items-center justify-center gap-2 mt-2"
-                >
-                  <span>Register &amp; Access Dashboard</span>
-                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                </button>
-
-                <div className="relative flex items-center py-2">
-                  <div className="flex-grow border-t border-slate-200"></div>
-                  <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-semibold uppercase tracking-wider">OR</span>
-                  <div className="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  className="w-full bg-white text-slate-700 border border-slate-300 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors"
-                >
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                  <span>Continue with Google</span>
-                </button>
-              </form>
-            )}
           </div>
 
           {/* Mode Switcher Options */}
@@ -570,12 +436,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             {mode !== 'login' && (
               <button onClick={() => setMode('login')} className="text-slate-700 hover:underline">
                 Log In with Password
-              </button>
-            )}
-
-            {mode !== 'register' && mode !== 'setGoogleSemester' && (
-              <button onClick={() => setMode('register')} className="text-slate-700 hover:underline">
-                Full Register
               </button>
             )}
           </div>
