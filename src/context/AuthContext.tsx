@@ -70,9 +70,25 @@ const AuthContext = createContext<AuthContextType>({
   bypassLogin: async () => false,
 });
 
+// Default guest profile for direct dashboard access (auth bypassed)
+const DEFAULT_GUEST_PROFILE: UserProfile = {
+  uid: 'guest-default',
+  usn: 'GUEST001',
+  dob: '2000-01-01',
+  name: 'Student',
+  email: 'guest@examify.com',
+  department: 'BCA',
+  semester: 4,
+  section: 'A',
+  role: 'student',
+  passwordSet: true,
+  createdAt: new Date().toISOString(),
+  completedItems: { notes: [], quizzes: [], pyqs: [], labs: [], important: [] },
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<UserProfile | null>(DEFAULT_GUEST_PROFILE);
+  const [loading, setLoading] = useState<boolean>(false);
   const isRegistering = useRef(false);
 
   // Temporary state to hold user data during verification -> setPassword flow
@@ -86,23 +102,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
             const profile = userDoc.data() as UserProfile;
-            // Ensure completedItems structure exists in case it was created without it
             if (!profile.completedItems) {
                profile.completedItems = { notes: [], quizzes: [], pyqs: [], labs: [], important: [] };
             }
             setUser(profile);
           } else {
-            console.warn('Firebase user exists but no Firestore profile found.');
-            if (!isRegistering.current) {
-              setUser(null);
-            }
+            // No Firestore profile — use default guest
+            setUser(DEFAULT_GUEST_PROFILE);
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
-          setUser(null);
+          setUser(DEFAULT_GUEST_PROFILE);
         }
       } else {
-        setUser(null);
+        // No Firebase user — use default guest (auth bypassed)
+        setUser(DEFAULT_GUEST_PROFILE);
       }
       setLoading(false);
     });
